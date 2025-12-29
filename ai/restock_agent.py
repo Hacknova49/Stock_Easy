@@ -15,7 +15,7 @@ def load_data(path):
 
 def assign_priority(df):
     max_sales = df["avg_daily_sales"].max()
-#adding priority to most sold items for restocking  
+
     def priority_from_ratio(avg_sales):
         ratio = avg_sales / max_sales
         if ratio >= 0.7:
@@ -48,18 +48,14 @@ def restock_decision(row):
         "reason": "Sufficient stock available"
     }
 
-def main():
+def run_agent():
     df = load_data(DATA_PATH)
     df = assign_priority(df)
     df = df.sort_values(by=["priority", "avg_daily_sales"], ascending=False)
 
     total_spent = 0
     supplier_spend = {s: 0 for s in SUPPLIER_BUDGETS}
-
-    print("\n==============================")
-    print("   StockEasy Priority Restock Agent")
-    print("==============================\n")
-    print(f"Monthly Budget: ₹{MONTHLY_BUDGET}\n")
+    decisions = []
 
     for _, row in df.iterrows():
         result = restock_decision(row)
@@ -74,41 +70,54 @@ def main():
         item_cost = result["restock_qty"] * row["supplier_cost"]
 
         if total_spent + item_cost > MONTHLY_BUDGET:
-            print(f"Item: {row['product']}")
-            print("Decision: SKIPPED")
-            print("Reason: Monthly budget limit reached")
-            print("-" * 40)
             continue
 
         if supplier_spend[supplier] + item_cost > SUPPLIER_BUDGETS[supplier]:
-            print(f"Item: {row['product']}")
-            print("Decision: SKIPPED")
-            print(f"Reason: Supplier {supplier} budget exceeded")
-            print("-" * 40)
             continue
 
         total_spent += item_cost
         supplier_spend[supplier] += item_cost
 
-        print(f"Item: {row['product']}")
-        print(f"Priority: {row['priority']}")
-        print(f"Avg daily sales: {row['avg_daily_sales']}")
-        print(f"Current stock: {row['current_stock']}")
-        print(f"Restock quantity: {result['restock_qty']}")
-        print(f"Supplier: {supplier}")
-        print(f"Item cost: ₹{item_cost}")
-        print(f"Remaining budget: ₹{MONTHLY_BUDGET - total_spent}")
-        print("Decision: RESTOCK APPROVED")
-        print("Reason:", result["reason"])
-        print("-" * 40)
+        decisions.append({
+            "product": row["product"],
+            "category": row["category"],
+            "supplier_id": supplier,
+            "priority": int(row["priority"]),
+            "avg_daily_sales": int(row["avg_daily_sales"]),
+            "current_stock": int(row["current_stock"]),
+            "restock_quantity": result["restock_qty"],
+            "supplier_cost_per_unit": row["supplier_cost"],
+            "total_cost": item_cost,
+            "reason": result["reason"]
+        })
 
-    print("\n=========== SUMMARY ===========")
-    print(f"Total spent: ₹{total_spent}")
-    print(f"Budget remaining: ₹{MONTHLY_BUDGET - total_spent}")
-    print("Supplier spend breakdown:")
-    for s, amt in supplier_spend.items():
-        print(f"{s}: ₹{amt}")
-    print("================================\n")
+    return {
+        "buffer_days": BUFFER_DAYS,
+        "monthly_budget": MONTHLY_BUDGET,
+        "total_spent": total_spent,
+        "budget_remaining": MONTHLY_BUDGET - total_spent,
+        "supplier_spend": supplier_spend,
+        "decisions": decisions
+    }
+
+def main():
+    output = run_agent()
+
+    print("\n==============================")
+    print("   StockEasy Restock Agent")
+    print("==============================\n")
+    print(f"Total spent: ₹{output['total_spent']}")
+    print(f"Budget remaining: ₹{output['budget_remaining']}")
+    print(f"Items restocked: {len(output['decisions'])}\n")
+
+    for d in output["decisions"]:
+        print(f"Item: {d['product']}")
+        print(f"Priority: {d['priority']}")
+        print(f"Supplier: {d['supplier_id']}")
+        print(f"Restock qty: {d['restock_quantity']}")
+        print(f"Cost: ₹{d['total_cost']}")
+        print("Reason:", d["reason"])
+        print("-" * 40)
 
 if __name__ == "__main__":
     main()
