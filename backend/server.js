@@ -34,3 +34,46 @@ app.get('/', (req, res) => {
     `);
 });
 app.listen(PORT, () => console.log(`Backend live on port ${PORT}`));
+
+const axios = require('axios');
+
+// Add this route to server.js
+app.get('/test-api-connection', async (req, res) => {
+    try {
+        // FastAPI usually runs on port 8000
+        const fastApiResponse = await axios.get('http://127.0.0.1:8000/');
+        
+        res.json({
+            status: "Success! ✅",
+            message: "Node.js successfully reached FastAPI",
+            dataFromFastApi: fastApiResponse.data
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: "Failed ❌",
+            message: "Node.js could not reach FastAPI. Is the Python server running?",
+            error: error.message
+        });
+    }
+});
+
+// Add this exact block to your server.js
+app.get('/test-api-connection', async (req, res) => {
+    try {
+        const axios = require('axios'); // Ensure axios is installed
+        // This attempts to "ping" your partner's FastAPI on port 8000
+        const fastApiResponse = await axios.get('http://127.0.0.1:8000/');
+        
+        res.json({
+            status: "Success! ✅",
+            message: "Node.js successfully reached FastAPI",
+            dataFromFastApi: fastApiResponse.data
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: "Failed ❌",
+            message: "Node.js could not reach FastAPI. Is the Python server running on port 8000?",
+            error: error.message
+        });
+    }
+});

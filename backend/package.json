@@ -2,8 +2,9 @@
   "name": "stock-easy-backend",
   "version": "1.0.0",
   "dependencies": {
-    "express": "^4.18.2",
+    "axios": "^1.13.2",
+    "dotenv": "^16.4.1",
     "ethers": "^6.10.0",
-    "dotenv": "^16.4.1"
+    "express": "^4.18.2"
   }
 }
