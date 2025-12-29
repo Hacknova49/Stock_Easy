@@ -15,3 +15,7 @@ model.fit(X, y)
 joblib.dump(model, "ml/models/demand_model.joblib")
 
 print("Demand model trained and saved")
+print("Predicted demand stats:")
+print("Min:", y.min())
+print("Max:", y.max())
+print("Mean:", y.mean())

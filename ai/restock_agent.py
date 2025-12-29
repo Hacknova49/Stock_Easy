@@ -1,4 +1,5 @@
 import pandas as pd
+from datetime import datetime
 from ml.predict import predict_7_day_demand
 
 DATA_PATH = "data/processed_dataset/inventory.csv"
@@ -55,8 +56,9 @@ def restock_decision(row):
     }
 
 def run_agent():
-    df = load_data(DATA_PATH)
+    cycle_id = datetime.utcnow().isoformat()
 
+    df = load_data(DATA_PATH)
     df["predicted_7d_demand"] = predict_7_day_demand(df)
 
     MONTHLY_BUDGET = compute_monthly_budget(df)
@@ -68,9 +70,7 @@ def run_agent():
     }
 
     df = df[df["predicted_7d_demand"] >= MIN_DEMAND_THRESHOLD]
-
     df = df.sort_values("predicted_7d_demand", ascending=False).head(MAX_ACTIVE_SKUS)
-
     df = assign_priority(df)
 
     df = df.sort_values(
@@ -113,12 +113,24 @@ def run_agent():
             "restock_quantity": result["restock_qty"],
             "supplier_cost_per_unit": row["supplier_cost"],
             "total_cost": item_cost,
-            "reason": result["reason"]
+            "reason": result["reason"],
+
+            "payment_intent": {
+                "merchant_id": supplier,
+                "amount": item_cost,
+                "currency": "INR",
+                "purpose": "Inventory restocking based on ML demand forecast",
+                "constraints": {
+                    "max_amount": SUPPLIER_BUDGETS[supplier],
+                    "allowed_merchant": True
+                }
+            }
         })
 
     total_spent = round(total_spent, 2)
 
     return {
+        "cycle_id": cycle_id,
         "buffer_days": BUFFER_DAYS,
         "monthly_budget": MONTHLY_BUDGET,
         "total_spent": total_spent,
@@ -134,6 +146,7 @@ def main():
     print("\n==============================")
     print("   StockEasy Restock Agent")
     print("==============================\n")
+    print(f"Cycle ID: {output['cycle_id']}")
     print(f"Monthly Budget: ₹{output['monthly_budget']}")
     print(f"Total spent: ₹{output['total_spent']}")
     print(f"Budget remaining: ₹{output['budget_remaining']}")
@@ -142,12 +155,10 @@ def main():
 
     for d in output["decisions"]:
         print(f"Item: {d['product']}")
-        print(f"Priority: {d['priority']}")
         print(f"Supplier: {d['supplier_id']}")
-        print(f"Predicted demand (7d): {d['predicted_7d_demand']}")
         print(f"Restock qty: {d['restock_quantity']}")
         print(f"Cost: ₹{d['total_cost']}")
-        print("Reason:", d["reason"])
+        print("Payment Intent:", d["payment_intent"])
         print("-" * 40)
 
 if __name__ == "__main__":
