@@ -8,3 +8,7 @@ pip install -r requirements.txt
 cd ai
 python restock_agent.py
 ```
+# Run/check the ai gent is giving correct response to the backend or not
+```
+uvicorn api:app --reload
+```
