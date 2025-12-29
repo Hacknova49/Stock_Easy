@@ -12,3 +12,7 @@ python restock_agent.py
 ```
 uvicorn api:app --reload
 ```
+or
+```
+python -m uvicorn api:app --reload
+```
