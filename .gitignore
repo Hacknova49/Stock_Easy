@@ -52,3 +52,5 @@ build/
 # Optional: generated outputs
 # =====================
 restock_decisions.json
+# Environment variables
+backend/.env
