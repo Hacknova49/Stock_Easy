@@ -17,3 +17,17 @@ or
 ```
 python -m uvicorn api:app --reload
 ```
+# run ml
+```
+cd ai
+python -m ml.features
+```
+
+```
+python -m ml.train
+```
+```
+python -m ml.predict
+python restock_agent.py
+
+```
