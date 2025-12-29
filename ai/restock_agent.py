@@ -1,6 +1,6 @@
 import pandas as pd
 
-DATA_PATH = "data/processed/inventory.csv"
+DATA_PATH = "data/processed_dataset/inventory.csv"
 BUFFER_DAYS = 7
 MONTHLY_BUDGET = 5000
 
