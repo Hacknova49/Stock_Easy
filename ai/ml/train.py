@@ -4,7 +4,7 @@ import joblib
 
 from ml.features import build_features
 
-df = pd.read_csv("data/processed/inventory.csv")
+df = pd.read_csv("data/processed_dataset/inventory.csv")
 
 X, y, _ = build_features(df)
 
