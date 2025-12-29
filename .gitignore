@@ -1,10 +1,54 @@
-# Python virtual environment
+# =====================
+# Python / AI-ML
+# =====================
 .venv/
-
-# Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
 
-# OS files
+# =====================
+# Jupyter
+# =====================
+.ipynb_checkpoints/
+
+# =====================
+# Node / Frontend / Backend
+# =====================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =====================
+# Environment variables
+# =====================
+.env
+.env.local
+.env.*.local
+
+# =====================
+# OS / Editor files
+# =====================
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/
+
+# =====================
+# Logs & temp files
+# =====================
+*.log
+*.tmp
+
+# =====================
+# Build / dist
+# =====================
+dist/
+build/
+
+# =====================
+# Optional: generated outputs
+# =====================
+restock_decisions.json
