@@ -3,18 +3,14 @@ require('dotenv').config();
 const { createPublicClient, http, parseEther } = require("viem");
 const { polygonAmoy } = require("viem/chains");
 const { privateKeyToAccount } = require("viem/accounts");
-const { createKernelAccountClient } = require("@zerodev/sdk");
+const { createKernelAccountClient, createZeroDevPaymasterClient } = require("@zerodev/sdk"); // Added Paymaster Import
 const { KERNEL_V3_1, getEntryPoint } = require("@zerodev/sdk/constants");
-
-// FIX: Import deserialize from /permissions and toECDSASigner from /signers
 const { deserializePermissionAccount } = require("@zerodev/permissions");
 const { toECDSASigner } = require("@zerodev/permissions/signers");
 
 async function testAutoPay() {
     console.log("--- Environment Check ---");
     console.log("PROJECT_ID: Found");
-    console.log("SESSION_PRIVATE_KEY: Found");
-    console.log("SERIALIZED_SESSION: Found");
     console.log("-------------------------\n");
 
     const publicClient = createPublicClient({ 
@@ -22,8 +18,11 @@ async function testAutoPay() {
         transport: http("https://rpc-amoy.polygon.technology") 
     });
     const entryPoint = getEntryPoint("0.7");
+    
+    // The unified RPC URL for V3
+    const ZERODEV_RPC = `https://rpc.zerodev.app/api/v3/${process.env.ZERODEV_PROJECT_ID}/chain/80002`;
 
-    // 1. Prepare the Agent's Signer (The Backend Key)
+    // 1. Prepare the Agent's Signer
     const sessionKeyAccount = privateKeyToAccount(process.env.SESSION_PRIVATE_KEY);
     const sessionKeySigner = await toECDSASigner({
         signer: sessionKeyAccount,
@@ -40,34 +39,67 @@ async function testAutoPay() {
         sessionKeySigner 
     );
 
-    // 3. Setup the Client
-    const kernelClient = createKernelAccountClient({
-        account,
-        chain: polygonAmoy,
-        bundlerTransport: http(`https://rpc.zerodev.app/api/v3/bundler/${process.env.ZERODEV_PROJECT_ID}`),
-    });
-
     console.log("💼 Smart Account Address:", account.address);
-    // Check balance before sending
-    const balance = await publicClient.getBalance({ address: account.address });
-    console.log(`💰 Smart Account Balance: ${balance.toString()} wei`);
 
-    if (balance === 0n) {
-        console.log("⚠️ WARNING: Your Smart Account is empty!");
-        console.log(`Please send some test MATIC to: ${account.address}`);
-        return; // Stop here so you don't waste a request
+    // 3. Setup the Paymaster and Client
+    // const kernelClient = createKernelAccountClient({
+    //     account,
+    //     chain: polygonAmoy,
+    //     bundlerTransport: http(ZERODEV_RPC),
+    //     // This middleware tells the client to use the Paymaster for every transaction
+    //     middleware: {
+    //         sponsorUserOperation: async ({ userOperation }) => {
+    //             const paymasterClient = createZeroDevPaymasterClient({
+    //                 chain: polygonAmoy,
+    //                 transport: http(ZERODEV_RPC),
+    //                 entryPoint,
+    //             });
+    //             return paymasterClient.sponsorUserOperation({
+    //                 userOperation,
+    //                 entryPoint,
+    //             });
+    //         },
+    //     },
+    // });
+const kernelClient = createKernelAccountClient({
+    account,
+    chain: polygonAmoy,
+    bundlerTransport: http(`https://rpc.zerodev.app/api/v3/${process.env.ZERODEV_PROJECT_ID}/chain/80002`),
+    
+    // V3 uses this specific middleware structure for sponsorship
+    paymaster: {
+        type: "SPONSOR",
+        paymasterClient: createZeroDevPaymasterClient({
+            chain: polygonAmoy,
+            transport: http(`https://rpc.zerodev.app/api/v3/${process.env.ZERODEV_PROJECT_ID}/chain/80002`),
+            entryPoint,
+        }),
     }
+});
     // 4. Send a tiny 0.0001 MATIC transaction to verify
-    console.log("🚀 Attempting automated payment...");
-    const txHash = await kernelClient.sendTransaction({
-        to: "0x4C2c3EcB63647E34Bd473A1DEc2708D365806Ed2",
-        value: parseEther("0.0001"),
-    });
+    console.log("🚀 Attempting automated payment (Sponsored)...");
+    try {
+        const txHash = await kernelClient.sendTransaction({
+            to: "0x4C2c3EcB63647E34Bd473A1DEc2708D365806Ed2",
+            value: 0n,
+        });
 
-    console.log(`\n✅ SUCCESS! Shopkeeper Auto-Payment is LIVE.`);
-    console.log(`🔗 Transaction: https://amoy.polygonscan.com/tx/${txHash}`);
+        console.log(`\n✅ SUCCESS! Shopkeeper Auto-Payment is LIVE.`);
+        console.log(`🔗 Transaction: https://amoy.polygonscan.com/tx/${txHash}`);
+    } catch (err) {
+        console.error("❌ Transaction Failed!");
+        // If it still fails, it's likely a lack of "Gas Credits" on the Dashboard
+        console.error(err.shortMessage || err.message);
+    }
 }
-
+// const kernelClient = createKernelAccountClient({
+//     account,
+//     chain: polygonAmoy,
+//     bundlerTransport: http(`https://rpc.zerodev.app/api/v3/${process.env.ZERODEV_PROJECT_ID}/chain/80002`),
+    
+//     // THE KEY LINE: This activates the "Sponsor All" policy you just saved
+//     paymaster: { type: "SPONSOR" } 
+// });
 testAutoPay().catch((err) => {
     console.error("❌ Error Details:");
     console.error(err);
