@@ -1,79 +1,100 @@
+require('dotenv').config();
 const express = require('express');
+const axios = require('axios');
+const { ethers } = require('ethers');
+const { createKernelAccount, createKernelAccountClient, createZeroDevPaymasterClient } = require("@zerodev/sdk");
+const { KERNEL_V3_1, getEntryPoint } = require("@zerodev/sdk/constants");
+const { signerToEcdsaValidator } = require("@zerodev/ecdsa-validator");
+const { http, createPublicClient } = require("viem");
+const { polygonAmoy } = require("viem/chains");
+
 const app = express();
 app.use(express.json());
 
-// Fake Inventory Data
 let inventory = { "Milk": 10, "Bread": 5 };
+let smartAccountClient = null;
 
-app.get('/stock', (req, res) => res.json(inventory));
+// --- INITIALIZATION ---
 
-// Logic to "Sell" an item and check for low stock
-app.post('/sell', (req, res) => {
-    const { item } = req.body;
-    if (inventory[item] > 0) {
-        inventory[item]--;
-        
-        // Threshold check: If stock is low, trigger "Autonomous Order"
-        if (inventory[item] < 3) {
-            console.log(`⚠️ LOW STOCK: Ordering more ${item}...`);
-            // This is where we will add the Polygon payment logic next!
+
+        const { privateKeyToAccount } = require("viem/accounts"); // Add this import at the top
+
+async function initializeSmartAccount() {
+    const publicClient = createPublicClient({
+        chain: polygonAmoy,
+        transport: http(process.env.POLYGON_RPC_URL),
+    });
+
+    // FIX: Use viem's privateKeyToAccount instead of ethers wallet
+    const signer = privateKeyToAccount(process.env.PRIVATE_KEY); 
+    const entryPoint = getEntryPoint("0.7");
+
+    const ecdsaValidator = await signerToEcdsaValidator(publicClient, {
+        signer, // Now this contains the 'address' property ZeroDev is looking for
+        entryPoint,
+        kernelVersion: KERNEL_V3_1,
+    });
+
+    const account = await createKernelAccount(publicClient, {
+        plugins: { sudo: ecdsaValidator },
+        entryPoint,
+        kernelVersion: KERNEL_V3_1,
+    });
+
+    smartAccountClient = createKernelAccountClient({
+        account,
+        chain: polygonAmoy,
+        bundlerTransport: http(`https://rpc.zerodev.app/api/v2/bundler/${process.env.ZERODEV_PROJECT_ID}`),
+        paymaster: createZeroDevPaymasterClient({
+            chain: polygonAmoy,
+            transport: http(`https://rpc.zerodev.app/api/v2/paymaster/${process.env.ZERODEV_PROJECT_ID}`),
+        }),
+    });
+
+    console.log(`🚀 Smart Account Ready: ${account.address}`);
+}
+
+// --- AUTONOMOUS LOGIC ---
+
+async function runAutonomousOrder() {
+    try {
+        const aiResponse = await axios.get('http://127.0.0.1:8000/predict');
+        const { risk_level, product_name } = aiResponse.data;
+
+        if (risk_level === "high" || inventory.Milk < 3) {
+            console.log(`🤖 AI Risk High for ${product_name}. Executing Session Payment...`);
+
+            // This sends a "UserOperation" (Account Abstraction transaction)
+            const userOpHash = await smartAccountClient.sendUserOperation({
+                callData: await smartAccountClient.account.encodeCalls([{
+                    to: process.env.SUPPLIER_ADDRESS,
+                    value: ethers.parseEther("0.001"),
+                    data: "0x",
+                }]),
+            });
+
+            console.log(`💰 Payment Sent! UserOp Hash: ${userOpHash}`);
+            inventory.Milk += 10; 
         }
-        res.send({ message: "Sold!", currentStock: inventory[item] });
-    } else {
-        res.status(400).send({ message: "Out of stock!" });
+    } catch (error) {
+        console.error("❌ Session Payment Failed:", error.message);
     }
+}
+
+// --- ROUTES ---
+
+app.get('/demo-start', async (req, res) => {
+    // Basic simulation logic...
+    setInterval(async () => {
+        if (inventory.Milk > 0) {
+            inventory.Milk--;
+            if (inventory.Milk < 3) await runAutonomousOrder();
+        }
+    }, 5000);
+    res.send("Autonomous Smart Account Demo Started.");
 });
 
 const PORT = 3000;
-// This handles the homepage (/)
-app.get('/', (req, res) => {
-    res.send(`
-        <h1>🏪 Shopkeeper Backend is Live</h1>
-        <p>Check inventory at: <a href="/stock">/stock</a></p>
-        <p>Status: <span style="color: green;">Online</span></p>
-    `);
-});
-app.listen(PORT, () => console.log(`Backend live on port ${PORT}`));
-
-const axios = require('axios');
-
-// Add this route to server.js
-app.get('/test-api-connection', async (req, res) => {
-    try {
-        // FastAPI usually runs on port 8000
-        const fastApiResponse = await axios.get('http://127.0.0.1:8000/');
-        
-        res.json({
-            status: "Success! ✅",
-            message: "Node.js successfully reached FastAPI",
-            dataFromFastApi: fastApiResponse.data
-        });
-    } catch (error) {
-        res.status(500).json({
-            status: "Failed ❌",
-            message: "Node.js could not reach FastAPI. Is the Python server running?",
-            error: error.message
-        });
-    }
-});
-
-// Add this exact block to your server.js
-app.get('/test-api-connection', async (req, res) => {
-    try {
-        const axios = require('axios'); // Ensure axios is installed
-        // This attempts to "ping" your partner's FastAPI on port 8000
-        const fastApiResponse = await axios.get('http://127.0.0.1:8000/');
-        
-        res.json({
-            status: "Success! ✅",
-            message: "Node.js successfully reached FastAPI",
-            dataFromFastApi: fastApiResponse.data
-        });
-    } catch (error) {
-        res.status(500).json({
-            status: "Failed ❌",
-            message: "Node.js could not reach FastAPI. Is the Python server running on port 8000?",
-            error: error.message
-        });
-    }
+initializeSmartAccount().then(() => {
+    app.listen(PORT, () => console.log(`Backend live on port ${PORT}`));
 });
