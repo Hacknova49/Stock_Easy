@@ -120,14 +120,15 @@ python -m venv .venv
 pip install -r requirements.txt
 python -m pip install uvicorn
 
-cd ai
+
 python -m ml.features
 python -m ml.train
 python -m ml.predict
 
-cd ai
 python restock_agent.py
-
+```
+new terminal cd ai 
+```
 uvicorn api:app --reload
 # or
 python -m uvicorn api:app --reload
