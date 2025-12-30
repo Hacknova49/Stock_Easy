@@ -3,3 +3,18 @@
 @tailwind utilities;
 
 
+/* App.css or index.css */
+#root {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #000000; /* Force black at the root level */
+}
