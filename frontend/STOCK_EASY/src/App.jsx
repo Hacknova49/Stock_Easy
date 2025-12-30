@@ -10,15 +10,13 @@ function App() {
     <>
       <Squares 
           speed={0.5} 
-          squareSize={40}
+          squareSize={60}
           direction='diagonal'
-          borderColor='#662a75ff'
+          borderColor='#262426ff'
           hoverFillColor='#413d3dff'
         />
-      <div className='backgroundcolour' >
-        <h1 className="text-6xl font-bold text-blue-500">
-          hello
-        </h1>
+      <div clas="center">
+        <button>Hello</button>
       </div>
 
     </>
