@@ -145,7 +145,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  padding: 1px; 
+  padding: 4px; 
   background: radial-gradient(
     var(--glow-radius) circle at var(--glow-x) var(--glow-y),
     rgba(132, 0, 255, calc(var(--glow-intensity) * 0.8)) 0%,

@@ -33,39 +33,39 @@ const MOBILE_BREAKPOINT = 768;
 const cardData: BentoCardProps[] = [
   {
     color: '#060010',
-    title: 'Analytics',
-    description: 'Track user behavior',
-    label: 'Insights'
+    label: 'AI Agent',
+    title: 'Demand Prediction',
+    description: 'Predicts 7-day SKU demand using ML and triggers autonomous restocking decisions'
   },
   {
     color: '#060010',
-    title: 'Dashboard',
-    description: 'Centralized data view',
-    label: 'Overview'
+    label: 'Decision Engine',
+    title: 'Autonomous Procurement',
+    description: 'Selects high-priority SKUs under monthly and supplier-level budget constraints'
   },
   {
     color: '#060010',
-    title: 'Collaboration',
-    description: 'Work together seamlessly',
-    label: 'Teamwork'
+    label: 'Payment Intent',
+    title: 'Restricted Spend',
+    description: 'AI generates payment intents without holding private keys or executing payments'
   },
   {
     color: '#060010',
-    title: 'Automation',
-    description: 'Streamline workflows',
-    label: 'Efficiency'
+    label: 'Security',
+    title: 'Session Keys',
+    description: 'Agent operates with capped, merchant-locked permissions enforced externally'
   },
   {
     color: '#060010',
-    title: 'Integration',
-    description: 'Connect favorite tools',
-    label: 'Connectivity'
+    label: 'Policy Layer',
+    title: 'Backend Enforcement',
+    description: 'All spend limits and supplier rules are enforced outside the AI'
   },
   {
     color: '#060010',
-    title: 'Security',
-    description: 'Enterprise-grade protection',
-    label: 'Protection'
+    label: 'Settlement',
+    title: 'On-Chain Execution',
+    description: 'Payments are settled autonomously via ERC-4337 smart accounts'
   }
 ];
 
