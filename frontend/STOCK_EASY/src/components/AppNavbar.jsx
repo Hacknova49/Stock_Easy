@@ -1,38 +1,57 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import GooeyNav from "./GooeyNav";
 
 const navItems = [
   { label: "Home", path: "/" },
   { label: "Dashboard", path: "/dashboard" },
-  { label: "About us", path: "/"}
+  { label: "About", path: "/about" }
 ];
 
 function AppNavbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  // Helper function to get index from current URL
+  // Using a function inside useState is called "Lazy Initialization"
+  const getIndexFromPath = () => {
+    const index = navItems.findIndex(item => item.path === location.pathname);
+    return index !== -1 ? index : 0;
+  };
 
-  // Sync active tab with current route
+  // We set the initial state by checking the URL immediately
+  const [activeIndex, setActiveIndex] = useState(getIndexFromPath);
+
+  // Sync state if the user hits "Back/Forward" in the browser
   useEffect(() => {
-    const index = navItems.findIndex(
-      item => item.path === location.pathname
-    );
-    if (index !== -1) {
-      setActiveIndex(index);
+    const newIndex = getIndexFromPath();
+    if (newIndex !== activeIndex) {
+      setActiveIndex(newIndex);
     }
   }, [location.pathname]);
 
+  const formattedItems = useMemo(() => 
+    navItems.map((item, index) => ({
+      label: item.label,
+      href: item.path,
+      onClick: (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        
+        // Update local state immediately for instant feedback
+        setActiveIndex(index);
+        navigate(item.path);
+      },
+    })), 
+  [navigate]);
+
   return (
-    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 mt-6">
+    <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-auto">
       <div className="mt-6">
         <GooeyNav
-          items={navItems.map(item => ({
-            label: item.label,
-            onClick: () => navigate(item.path),
-          }))}
-          initialActiveIndex={activeIndex}
+          items={formattedItems}
+          // Use the computed activeIndex
+          initialActiveIndex={activeIndex} 
+          activeIndex={activeIndex} 
           particleCount={15}
           particleDistances={[90, 10]}
           particleR={100}
@@ -41,7 +60,7 @@ function AppNavbar() {
           colors={[1, 2, 3, 1, 2, 3, 1, 4]}
         />
       </div>
-    </div>
+    </nav>
   );
 }
 

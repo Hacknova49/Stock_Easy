@@ -18,8 +18,8 @@ function Landing() {
           speed={0.5} 
           squareSize={60}
           direction="diagonal"
-          borderColor="#1a1a1a" 
-          hoverFillColor="#2a2a2a"
+          borderColor="#303232ff" 
+          hoverFillColor="#543838ff"
         />
       </div>
 
