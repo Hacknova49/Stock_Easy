@@ -13,6 +13,16 @@ app.use(express.json());
 
 let inventory = { "Milk": 10, "Bread": 5 };
 let smartAccountClient = null;
+const sessions = {
+  shop_123: {
+    merchantAddress: process.env.SUPPLIER_ADDRESS,
+    dailyLimit: 2000,
+    perTxLimit: 200,
+    spentToday: 0,
+    expiry: Date.now() + 30 * 24 * 60 * 60 * 1000
+  }
+};
+
 
 // --- INITIALIZATION ---
 
@@ -26,7 +36,7 @@ async function initializeSmartAccount() {
     });
 
     // FIX: Use viem's privateKeyToAccount instead of ethers wallet
-    const signer = privateKeyToAccount(process.env.PRIVATE_KEY); 
+    const signer = privateKeyToAccount(process.env.SESSION_PRIVATE_KEY); 
     const entryPoint = getEntryPoint("0.7");
 
     const ecdsaValidator = await signerToEcdsaValidator(publicClient, {
@@ -80,6 +90,47 @@ async function runAutonomousOrder() {
         console.error("❌ Session Payment Failed:", error.message);
     }
 }
+async function autoPay(shopkeeperId, amount) {
+  const session = sessions[shopkeeperId];
+  if (!session) throw new Error("NO ACTIVE SESSION");
+
+  // Step 1 rule enforcement
+  if (Date.now() > session.expiry) throw new Error("SESSION EXPIRED");
+  if (amount > session.perTxLimit) throw new Error("PER TX LIMIT EXCEEDED");
+  if (session.spentToday + amount > session.dailyLimit)
+    throw new Error("DAILY LIMIT EXCEEDED");
+
+  const userOpHash = await smartAccountClient.sendUserOperation({
+    callData: await smartAccountClient.account.encodeCalls([{
+      to: session.merchantAddress,
+      value: ethers.parseEther("0.001"), // replace with token later
+      data: "0x"
+    }]),
+  });
+
+  session.spentToday += amount;
+  return userOpHash;
+}
+
+app.post("/api/autopay", async (req, res) => {
+  try {
+    const { shopkeeperId, amount, product } = req.body;
+
+    const txHash = await autoPay(shopkeeperId, amount);
+
+    res.json({
+      success: true,
+      product,
+      txHash
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
+
 
 // --- ROUTES ---
 
