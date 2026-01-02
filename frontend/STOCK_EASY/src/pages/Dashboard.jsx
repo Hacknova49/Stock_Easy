@@ -1,150 +1,135 @@
-import React, { useEffect, useState } from "react";
-import AppNavbar from "../components/AppNavbar";
+import React from "react";
+import { Link } from "react-router-dom";
+import { Bell } from "lucide-react";
+import "./Dashboard.css";
 
 function Dashboard() {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-
-  const fetchAgentData = async () => {
-    try {
-      const res = await fetch("http://localhost:8000/run-restock", {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error("Failed to fetch agent data");
-      const json = await res.json();
-      setData(json);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  // Auto-refresh every 3 seconds (shows autonomy)
-  useEffect(() => {
-    fetchAgentData();
-    const interval = setInterval(fetchAgentData, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-black text-red-400 p-6">
-        ❌ Error: {error}
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="min-h-screen bg-black text-white p-6">
-        Loading AI agent...
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-black text-white">
-
-      {/* NAVBAR */}
-      <AppNavbar />
-
-      {/* CONTENT */}
-      <div className="pt-28 p-6 space-y-8">
-
-        {/* HEADER */}
-        <h1 className="text-3xl font-bold">
-          Live Agent Dashboard
-        </h1>
-
-        {/* SYSTEM STATUS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatusCard label="AI Agent" value="ACTIVE" />
-          <StatusCard label="Session Key" value="ACTIVE (Restricted)" />
-          <StatusCard label="Network" value="Polygon Amoy" />
+    <div className="sketch-dashboard">
+      {/* HEADER */}
+      <header className="sketch-header">
+        <div className="header-top">
+          <h1 className="logo-text">Stock Easy</h1>
+          <div className="session-info">
+            <span className="dot">●</span> Session Active | Expires in 5h 42m
+          </div>
         </div>
+        <div className="header-divider"></div>
+        <nav className="sketch-nav">
+          <Link to="/dashboard" className="nav-item">Dashboard</Link>
+          <Link to="/about" className="nav-item">About</Link>
+          <Link to="/history" className="nav-item">History</Link>
+          <span className="nav-item autopay-stop">Autopay Stop</span>
+        </nav>
+      </header>
 
-        {/* BUDGET SUMMARY */}
-        <div className="border border-gray-700 rounded p-4">
-          <h2 className="text-xl font-semibold mb-2">
-            Budget Summary
-          </h2>
-          <p>Monthly Budget: ₹{data.monthly_budget}</p>
-          <p>Total Spent: ₹{data.total_spent}</p>
-          <p className="text-green-400">
-            Remaining: ₹{data.budget_remaining}
-          </p>
-        </div>
+      {/* MAIN CONTENT */}
+      <main className="sketch-main">
+        {/* TOP ROW CARDS */}
+        <div className="cards-container">
 
-        {/* AI DECISIONS */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">
-            AI Restock Decisions
-          </h2>
+          {/* STATUS CARD */}
+          <div className="sketch-card status-card-sketch">
+            <h3 className="card-title">Status Card</h3>
+            <div className="card-content">
+              <p className="status-row">Status: ACTIVE</p>
+              <p className="status-row">Valid until: Today,<br />6:30 PM</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data.decisions.map((d, index) => (
-              <div
-                key={index}
-                className="border border-gray-700 rounded p-4 space-y-2"
-              >
-                <h3 className="text-lg font-bold">
-                  {d.product}
-                </h3>
+              <div className="status-divider"></div>
 
-                <p>Supplier: {d.supplier_id}</p>
-                <p>Priority: {d.priority}</p>
-                <p>Predicted 7-Day Demand: {d.predicted_7d_demand}</p>
-                <p>Current Stock: {d.current_stock}</p>
+              <p className="status-row">Max per transaction:<br />₹1,000</p>
+              <p className="status-row">Daily spend limit:<br />₹10,000</p>
+              <p className="status-row">Allowed suppliers:<br />SUP1, SUP2</p>
 
-                <p className="text-yellow-300">
-                  Restock Quantity: {d.restock_quantity}
-                </p>
+              <p className="fine-print">
+                These rules are enforced automatically. The AI cannot exceed them.
+              </p>
+            </div>
+          </div>
 
-                <p className="text-sm text-gray-400">
-                  Reason: {d.reason}
-                </p>
+          {/* ACTIVITY SUMMARY (OVAL) */}
+          <div className="sketch-oval">
+            <h3 className="oval-title">Today's Activity<br />Summary</h3>
+            <div className="oval-content">
+              <p className="summary-row">AI actions executed: 6</p>
+              <p className="summary-row big-price">Total spent: ₹3,420</p>
+              <p className="summary-row">Actions blocked by policy: 1</p>
+            </div>
+          </div>
 
-                {/* PAYMENT INTENT */}
-                <div className="mt-3 border-t border-gray-600 pt-3">
-                  <h4 className="font-semibold text-blue-400">
-                    Payment Intent (Restricted)
-                  </h4>
-
-                  <p>
-                    Amount: ₹{d.total_cost} {d.payment_intent.currency}
-                  </p>
-                  <p>
-                    Purpose: {d.payment_intent.purpose}
-                  </p>
-
-                  <ul className="text-sm mt-2 space-y-1">
-                    <li>✔ Max Amount Enforced</li>
-                    <li>✔ Allowed Merchant Only</li>
-                    <li>✔ Session Key Used</li>
-                    <li>✔ No Private Keys</li>
-                  </ul>
-
-                  <p className="mt-2 text-green-400">
-                    Status: EXECUTED
-                  </p>
-                </div>
+          {/* NOTIFICATION */}
+          <div className="sketch-notification">
+            <div className="notification-icon-wrapper">
+              <Bell size={40} color="red" fill="red" />
+              <div className="wifi-lines">
+                <span>)</span>
+                <span>)</span>
               </div>
-            ))}
+            </div>
+            <div className="jagged-box">
+              <p>Healthy items: 18</p>
+              <p>Low stock: 3</p>
+              <p>Critical stock: 1</p>
+            </div>
           </div>
         </div>
 
-      </div>
-    </div>
-  );
-}
+        {/* RECENT ACTIONS HEADER */}
+        <div className="actions-header-container">
+          <span className="sparkle left">
+            <i className="line l1"></i>
+            <i className="line l2"></i>
+            <i className="line l3"></i>
+          </span>
+          <h2 className="actions-title">Recent AI Actions</h2>
+          <span className="sparkle right">
+            <i className="line l1"></i>
+            <i className="line l2"></i>
+            <i className="line l3"></i>
+          </span>
+        </div>
 
-/* SMALL REUSABLE STATUS CARD */
-function StatusCard({ label, value }) {
-  return (
-    <div className="border border-gray-700 rounded p-4 text-center">
-      <p className="text-sm text-gray-400">{label}</p>
-      <p className="text-lg font-semibold text-green-400">
-        {value}
-      </p>
+        {/* ACTIONS LIST */}
+        <div className="actions-list-container">
+
+          {/* ITEMS BOUGHT */}
+          <div className="action-column">
+            <h3 className="column-title">Items bought:</h3>
+            <div className="action-item">
+              <p className="product-name">Nachos Tangy Tomato</p>
+              <p>Restocked: 12 units</p>
+              <p>Supplier: SUP1</p>
+              <p>Amount: ₹777.60</p>
+              <p className="status-executed">
+                <span className="check-box">☑</span> Status: Executed
+              </p>
+              <p className="time">Time: 14:32</p>
+            </div>
+          </div>
+
+          {/* VERTICAL DIVIDER */}
+          <div className="vertical-line-container">
+            <div className="square-end top"></div>
+            <div className="vertical-line"></div>
+            <div className="square-end bottom"></div>
+          </div>
+
+          {/* BLOCKED ITEMS */}
+          <div className="action-column">
+            <h3 className="column-title">Blocked Items:</h3>
+            <div className="action-item">
+              <p className="product-name">Milk Packets</p>
+              <p>Attempted restock: 20 units</p>
+              <p>Amount: ₹1,200</p>
+              <p className="status-blocked">
+                <span className="stop-icon">⛔</span> Status: Blocked
+              </p>
+              <p className="reason">Reason: Exceeds per-transaction limit</p>
+            </div>
+          </div>
+
+        </div>
+      </main>
     </div>
   );
 }
