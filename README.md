@@ -127,7 +127,7 @@ python -m ml.predict
 
 python restock_agent.py
 ```
-new terminal cd ai 
+new terminal cd ai
 ```
 uvicorn api:app --reload
 # or
