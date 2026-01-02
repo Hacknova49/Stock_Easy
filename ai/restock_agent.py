@@ -1,44 +1,42 @@
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from ml.predict import predict_7_day_demand
 import uuid
+from typing import Optional
 
+# 👇 IMPORT DEFAULT CONFIG
+from default_config import DEFAULT_CONFIG
+
+# ===============================
+# CONSTANTS (NON-BUSINESS)
+# ===============================
 DATA_PATH = "data/processed_dataset/inventory.csv"
-BUFFER_DAYS = 7
-
 MAX_ACTIVE_SKUS = 500
-MIN_DEMAND_THRESHOLD = 5
 
-# -------------------------------
-# Demo Conversion Config
-# -------------------------------
-INR_TO_POL_RATE = 10_000_000        # ₹10,000,000 = 1 POL (demo)
+# Conversion (backend-owned)
+INR_TO_POL_RATE = 10_000_000   # ₹10,000,000 = 1 POL
 POL_DECIMALS = 10**18
 
 
+# ===============================
+# UTILS
+# ===============================
 def inr_to_wei(inr_amount: float) -> str:
     """
-    Convert INR → POL → wei using demo rate.
+    Convert INR → POL → wei using fixed conversion.
     """
     pol_amount = inr_amount / INR_TO_POL_RATE
-    wei_amount = int(pol_amount * POL_DECIMALS)
-    return str(wei_amount)
+    return str(int(pol_amount * POL_DECIMALS))
 
 
-# -------------------------------
-# Helpers
-# -------------------------------
-def compute_monthly_budget(df, days=30, buffer=1.2):
-    estimated_cost = (df["avg_daily_sales"] * days * df["supplier_cost"]).sum()
-    return int(estimated_cost * buffer)
-
-def load_data(path):
+def load_data(path: str) -> pd.DataFrame:
     return pd.read_csv(path)
 
-def assign_priority(df):
+
+def assign_priority(df: pd.DataFrame) -> pd.DataFrame:
     max_demand = df["predicted_7d_demand"].max()
 
-    def priority_from_ratio(predicted_demand):
+    def priority_from_ratio(predicted_demand: float) -> int:
         ratio = predicted_demand / max_demand
         if ratio >= 0.7:
             return 3
@@ -50,7 +48,8 @@ def assign_priority(df):
     df["priority"] = df["predicted_7d_demand"].apply(priority_from_ratio)
     return df
 
-def restock_decision(row):
+
+def restock_decision(row: pd.Series, buffer_days: int) -> dict:
     predicted_demand = row["predicted_7d_demand"]
     current_stock = row["current_stock"]
 
@@ -64,7 +63,7 @@ def restock_decision(row):
             "required_stock": int(required_stock),
             "reason": (
                 f"ML predicted {int(predicted_demand)} units demand "
-                f"for next {BUFFER_DAYS} days"
+                f"for next {buffer_days} days"
             )
         }
 
@@ -75,21 +74,29 @@ def restock_decision(row):
         "reason": "Predicted demand covered by current stock"
     }
 
-# -------------------------------
-# Main Agent
-# -------------------------------
-def run_agent():
-    cycle_id = datetime.utcnow().isoformat()
+
+# ===============================
+# MAIN AGENT (DEFAULT CONFIG FALLBACK)
+# ===============================
+def run_agent(config: Optional[dict] = None) -> dict:
+    """
+    If config is not provided, DEFAULT_CONFIG is used.
+    """
+
+    config = config or DEFAULT_CONFIG
+
+    cycle_id = datetime.now(timezone.utc).isoformat()
 
     df = load_data(DATA_PATH)
     df["predicted_7d_demand"] = predict_7_day_demand(df)
 
-    MONTHLY_BUDGET = compute_monthly_budget(df)
+    MONTHLY_BUDGET = config["monthly_budget"]
+    BUFFER_DAYS = config["buffer_days"]
+    MIN_DEMAND_THRESHOLD = config["min_demand_threshold"]
 
     SUPPLIER_BUDGETS = {
-        "SUP1": int(0.3 * MONTHLY_BUDGET),
-        "SUP2": int(0.4 * MONTHLY_BUDGET),
-        "SUP3": int(0.3 * MONTHLY_BUDGET)
+        supplier: int(MONTHLY_BUDGET * ratio)
+        for supplier, ratio in config["supplier_budget_split"].items()
     }
 
     df = df[df["predicted_7d_demand"] >= MIN_DEMAND_THRESHOLD]
@@ -106,7 +113,7 @@ def run_agent():
     decisions = []
 
     for _, row in df.iterrows():
-        result = restock_decision(row)
+        result = restock_decision(row, BUFFER_DAYS)
 
         if result["decision"] == "NO RESTOCK":
             continue
@@ -126,9 +133,10 @@ def run_agent():
         total_spent += item_cost
         supplier_spend[supplier] += item_cost
 
-        # --- Payment Intent (CHAIN-READY, DEMO SAFE) ---
         intent_id = f"restock-{cycle_id}-{supplier}-{uuid.uuid4().hex[:6]}"
-        valid_until = int((datetime.utcnow() + timedelta(minutes=15)).timestamp())
+        valid_until = int(
+            (datetime.now(timezone.utc) + timedelta(minutes=15)).timestamp()
+        )
 
         decisions.append({
             "product": row["product"],
@@ -142,12 +150,11 @@ def run_agent():
 
             "supplier_cost_per_unit": row["supplier_cost"],
             "total_cost": item_cost,
-
             "reason": result["reason"],
 
             "payment_intent": {
                 "intent_id": intent_id,
-                "supplier_address": "0xSUPPLIER_ADDRESS",  # mapped later
+                "supplier_address": config["supplier_address_map"][supplier],
                 "amount_wei": inr_to_wei(item_cost),
                 "token": "NATIVE",
                 "valid_until": valid_until,
@@ -158,45 +165,22 @@ def run_agent():
             }
         })
 
-    total_spent = round(total_spent, 2)
-
     return {
         "cycle_id": cycle_id,
         "buffer_days": BUFFER_DAYS,
+        "min_demand_threshold": MIN_DEMAND_THRESHOLD,
         "monthly_budget": MONTHLY_BUDGET,
-        "total_spent": total_spent,
-        "budget_remaining": MONTHLY_BUDGET - total_spent,
+        "total_spent": round(total_spent, 2),
+        "budget_remaining": MONTHLY_BUDGET - round(total_spent, 2),
         "supplier_spend": supplier_spend,
         "active_skus_processed": len(df),
         "decisions": decisions
     }
 
-# -------------------------------
-# Local Test Runner
-# -------------------------------
-def main():
-    output = run_agent()
 
-    print("\n==============================")
-    print("   StockEasy Restock Agent")
-    print("==============================\n")
-
-    print(f"Cycle ID: {output['cycle_id']}")
-    print(f"Monthly Budget: ₹{output['monthly_budget']}")
-    print(f"Total spent: ₹{output['total_spent']}")
-    print(f"Budget remaining: ₹{output['budget_remaining']}")
-    print(f"Active SKUs processed: {output['active_skus_processed']}")
-    print(f"Items restocked: {len(output['decisions'])}\n")
-
-    for d in output["decisions"]:
-        print(f"Item: {d['product']}")
-        print(f"Supplier: {d['supplier_id']}")
-        print(f"Priority: {d['priority']}")
-        print(f"Restock qty: {d['restock_quantity']}")
-        print(f"Cost (INR): ₹{d['total_cost']}")
-        print(f"Amount (wei): {d['payment_intent']['amount_wei']}")
-        print("Payment Intent:", d["payment_intent"])
-        print("-" * 40)
-
+# ===============================
+# LOCAL TEST
+# ===============================
 if __name__ == "__main__":
-    main()
+    result = run_agent()
+    print(f"Decisions generated: {len(result['decisions'])}")
