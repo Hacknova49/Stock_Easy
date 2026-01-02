@@ -1,5 +1,36 @@
 import React, { useEffect, useState } from "react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  RadialBarChart,
+  RadialBar,
+} from "recharts";
+import {
+  PieChart as PieIcon,
+  BarChart3,
+  TrendingUp,
+  Package,
+  DollarSign,
+  Activity
+} from "lucide-react";
 import AppNavbar from "../components/AppNavbar";
+import "./Dashboard.css";
+
+// Chart colors
+const COLORS = {
+  suppliers: ["#8b5cf6", "#06b6d4", "#f59e0b"],
+  priority: ["#4ade80", "#fbbf24", "#f87171"],
+  categories: ["#8b5cf6", "#06b6d4", "#f59e0b", "#4ade80", "#f87171", "#ec4899", "#84cc16", "#6366f1"],
+};
 
 function Dashboard() {
   const [data, setData] = useState(null);
@@ -18,133 +49,372 @@ function Dashboard() {
     }
   };
 
-  // Auto-refresh every 3 seconds (shows autonomy)
   useEffect(() => {
     fetchAgentData();
-    const interval = setInterval(fetchAgentData, 3000);
+    const interval = setInterval(fetchAgentData, 5000);
     return () => clearInterval(interval);
   }, []);
 
   if (error) {
     return (
-      <div className="min-h-screen bg-black text-red-400 p-6">
-        ❌ Error: {error}
+      <div className="error-container">
+        <div className="error-icon">❌</div>
+        <p className="error-text">Error: {error}</p>
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-black text-white p-6">
-        Loading AI agent...
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Loading AI Agent Data...</p>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-black text-white">
+  // Process data for charts
+  const supplierSpendData = Object.entries(data.supplier_spend || {}).map(([key, value]) => ({
+    name: key,
+    value: value,
+    displayValue: `₹${value.toLocaleString()}`,
+  }));
 
-      {/* NAVBAR */}
+  // Category distribution
+  const categoryMap = {};
+  data.decisions.forEach((d) => {
+    if (!categoryMap[d.category]) {
+      categoryMap[d.category] = { count: 0, quantity: 0, cost: 0 };
+    }
+    categoryMap[d.category].count++;
+    categoryMap[d.category].quantity += d.restock_quantity;
+    categoryMap[d.category].cost += d.total_cost;
+  });
+
+  const categoryData = Object.entries(categoryMap)
+    .map(([name, { quantity }]) => ({ name: name.substring(0, 15), quantity }))
+    .sort((a, b) => b.quantity - a.quantity)
+    .slice(0, 6);
+
+  // Priority distribution
+  const priorityMap = { 1: 0, 2: 0, 3: 0 };
+  data.decisions.forEach((d) => {
+    priorityMap[d.priority]++;
+  });
+
+  const priorityData = [
+    { name: "Low (1)", value: priorityMap[1], fill: COLORS.priority[0] },
+    { name: "Medium (2)", value: priorityMap[2], fill: COLORS.priority[1] },
+    { name: "High (3)", value: priorityMap[3], fill: COLORS.priority[2] },
+  ];
+
+  // Stock vs Demand comparison (top 8)
+  const stockDemandData = data.decisions
+    .slice(0, 8)
+    .map((d) => ({
+      name: d.product.substring(0, 12),
+      stock: d.current_stock,
+      demand: d.predicted_7d_demand,
+    }));
+
+  // Budget percentage
+  const budgetPercentage = ((data.total_spent / data.monthly_budget) * 100).toFixed(1);
+
+  // Priority label helper
+  const getPriorityLabel = (priority) => {
+    switch (priority) {
+      case 3: return { label: "HIGH", class: "high" };
+      case 2: return { label: "MEDIUM", class: "medium" };
+      default: return { label: "LOW", class: "low" };
+    }
+  };
+
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="custom-tooltip">
+          <p className="tooltip-label">{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} className="tooltip-value" style={{ color: entry.color }}>
+              {entry.name}: {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="dashboard-page">
       <AppNavbar />
 
-      {/* CONTENT */}
-      <div className="pt-28 p-6 space-y-8">
-
-        {/* HEADER */}
-        <h1 className="text-3xl font-bold">
-          Live Agent Dashboard
-        </h1>
-
-        {/* SYSTEM STATUS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatusCard label="AI Agent" value="ACTIVE" />
-          <StatusCard label="Session Key" value="ACTIVE (Restricted)" />
-          <StatusCard label="Network" value="Polygon Amoy" />
-        </div>
-
-        {/* BUDGET SUMMARY */}
-        <div className="border border-gray-700 rounded p-4">
-          <h2 className="text-xl font-semibold mb-2">
-            Budget Summary
-          </h2>
-          <p>Monthly Budget: ₹{data.monthly_budget}</p>
-          <p>Total Spent: ₹{data.total_spent}</p>
-          <p className="text-green-400">
-            Remaining: ₹{data.budget_remaining}
+      <div style={{ paddingTop: "80px" }}>
+        {/* Header */}
+        <div className="dashboard-header">
+          <h1 className="dashboard-title">Live Agent Dashboard</h1>
+          <p className="dashboard-subtitle">
+            AI-powered inventory management • Cycle: {data.cycle_id?.substring(0, 10)}
           </p>
         </div>
 
-        {/* AI DECISIONS */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">
-            AI Restock Decisions
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data.decisions.map((d, index) => (
-              <div
-                key={index}
-                className="border border-gray-700 rounded p-4 space-y-2"
-              >
-                <h3 className="text-lg font-bold">
-                  {d.product}
-                </h3>
-
-                <p>Supplier: {d.supplier_id}</p>
-                <p>Priority: {d.priority}</p>
-                <p>Predicted 7-Day Demand: {d.predicted_7d_demand}</p>
-                <p>Current Stock: {d.current_stock}</p>
-
-                <p className="text-yellow-300">
-                  Restock Quantity: {d.restock_quantity}
-                </p>
-
-                <p className="text-sm text-gray-400">
-                  Reason: {d.reason}
-                </p>
-
-                {/* PAYMENT INTENT */}
-                <div className="mt-3 border-t border-gray-600 pt-3">
-                  <h4 className="font-semibold text-blue-400">
-                    Payment Intent (Restricted)
-                  </h4>
-
-                  <p>
-                    Amount: ₹{d.total_cost} {d.payment_intent.currency}
-                  </p>
-                  <p>
-                    Purpose: {d.payment_intent.purpose}
-                  </p>
-
-                  <ul className="text-sm mt-2 space-y-1">
-                    <li>✔ Max Amount Enforced</li>
-                    <li>✔ Allowed Merchant Only</li>
-                    <li>✔ Session Key Used</li>
-                    <li>✔ No Private Keys</li>
-                  </ul>
-
-                  <p className="mt-2 text-green-400">
-                    Status: EXECUTED
-                  </p>
-                </div>
-              </div>
-            ))}
+        {/* Status Cards */}
+        <div className="status-grid">
+          <div className="status-card">
+            <p className="status-label">AI Agent</p>
+            <p className="status-value">ACTIVE</p>
+          </div>
+          <div className="status-card">
+            <p className="status-label">Session Key</p>
+            <p className="status-value">ACTIVE</p>
+          </div>
+          <div className="status-card">
+            <p className="status-label">Network</p>
+            <p className="status-value">Polygon Amoy</p>
+          </div>
+          <div className="status-card">
+            <p className="status-label">SKUs Processed</p>
+            <p className="status-value">{data.active_skus_processed}</p>
           </div>
         </div>
 
-      </div>
-    </div>
-  );
-}
+        {/* Budget Overview */}
+        <div className="budget-card">
+          <div className="budget-header">
+            <h2 className="budget-title">
+              <DollarSign size={20} style={{ color: "#4ade80" }} />
+              Budget Overview
+            </h2>
+            <span className="budget-period">Monthly Cycle</span>
+          </div>
 
-/* SMALL REUSABLE STATUS CARD */
-function StatusCard({ label, value }) {
-  return (
-    <div className="border border-gray-700 rounded p-4 text-center">
-      <p className="text-sm text-gray-400">{label}</p>
-      <p className="text-lg font-semibold text-green-400">
-        {value}
-      </p>
+          <div className="budget-stats">
+            <div className="budget-stat">
+              <p className="budget-stat-label">Total Budget</p>
+              <p className="budget-stat-value total">₹{data.monthly_budget?.toLocaleString()}</p>
+            </div>
+            <div className="budget-stat">
+              <p className="budget-stat-label">Total Spent</p>
+              <p className="budget-stat-value spent">₹{data.total_spent?.toLocaleString()}</p>
+            </div>
+            <div className="budget-stat">
+              <p className="budget-stat-label">Remaining</p>
+              <p className="budget-stat-value remaining">₹{data.budget_remaining?.toLocaleString()}</p>
+            </div>
+          </div>
+
+          <div className="budget-progress-container">
+            <div className="budget-progress-label">
+              <span>Budget Utilization</span>
+              <span>{budgetPercentage}%</span>
+            </div>
+            <div className="budget-progress-bar">
+              <div
+                className={`budget-progress-fill ${budgetPercentage > 90 ? "danger" : budgetPercentage > 70 ? "warning" : ""
+                  }`}
+                style={{ width: `${Math.min(budgetPercentage, 100)}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Grid */}
+        <div className="charts-grid">
+          {/* Supplier Spend Pie Chart */}
+          <div className="chart-card">
+            <h3 className="chart-title">
+              <PieIcon size={18} className="chart-icon" />
+              Supplier Spend Distribution
+            </h3>
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={supplierSpendData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, displayValue }) => `${name}: ${displayValue}`}
+                    labelLine={{ stroke: "#8080a0" }}
+                  >
+                    {supplierSpendData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS.suppliers[index % COLORS.suppliers.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => [`₹${value.toLocaleString()}`, "Spent"]}
+                    contentStyle={{
+                      background: "rgba(20, 20, 50, 0.95)",
+                      border: "1px solid rgba(138, 100, 255, 0.3)",
+                      borderRadius: "8px",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Priority Distribution */}
+          <div className="chart-card">
+            <h3 className="chart-title">
+              <Activity size={18} className="chart-icon" />
+              Priority Distribution
+            </h3>
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={priorityData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                    labelLine={{ stroke: "#8080a0" }}
+                  >
+                    {priorityData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => [value, "Items"]}
+                    contentStyle={{
+                      background: "rgba(20, 20, 50, 0.95)",
+                      border: "1px solid rgba(138, 100, 255, 0.3)",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Category Bar Chart */}
+          <div className="chart-card">
+            <h3 className="chart-title">
+              <BarChart3 size={18} className="chart-icon" />
+              Restock by Category
+            </h3>
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={categoryData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(100, 100, 180, 0.2)" />
+                  <XAxis type="number" stroke="#8080a0" />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    stroke="#8080a0"
+                    tick={{ fontSize: 11 }}
+                    width={100}
+                  />
+                  <Tooltip
+                    content={<CustomTooltip />}
+                    cursor={{ fill: "rgba(138, 100, 255, 0.1)" }}
+                  />
+                  <Bar dataKey="quantity" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Stock vs Demand */}
+          <div className="chart-card">
+            <h3 className="chart-title">
+              <TrendingUp size={18} className="chart-icon" />
+              Stock vs 7-Day Demand
+            </h3>
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stockDemandData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(100, 100, 180, 0.2)" />
+                  <XAxis dataKey="name" stroke="#8080a0" tick={{ fontSize: 10 }} />
+                  <YAxis stroke="#8080a0" />
+                  <Tooltip
+                    content={<CustomTooltip />}
+                    cursor={{ fill: "rgba(138, 100, 255, 0.1)" }}
+                  />
+                  <Legend />
+                  <Bar dataKey="stock" name="Current Stock" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="demand" name="Predicted Demand" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Decisions Section */}
+        <div className="decisions-section">
+          <h2 className="decisions-title">
+            <Package size={24} style={{ marginRight: "0.5rem", color: "#a0a0ff" }} />
+            AI Restock Decisions ({data.decisions.length} items)
+          </h2>
+
+          <div className="decisions-grid">
+            {data.decisions.slice(0, 6).map((d, index) => {
+              const priority = getPriorityLabel(d.priority);
+              return (
+                <div key={index} className="decision-card">
+                  <div className="decision-header">
+                    <h3 className="decision-product">{d.product}</h3>
+                    <span className={`decision-priority ${priority.class}`}>{priority.label}</span>
+                  </div>
+
+                  <div className="decision-details">
+                    <div className="decision-detail">
+                      <span className="decision-detail-label">Supplier</span>
+                      <span className="decision-detail-value">{d.supplier_id}</span>
+                    </div>
+                    <div className="decision-detail">
+                      <span className="decision-detail-label">Category</span>
+                      <span className="decision-detail-value">{d.category}</span>
+                    </div>
+                    <div className="decision-detail">
+                      <span className="decision-detail-label">Current Stock</span>
+                      <span className="decision-detail-value">{d.current_stock} units</span>
+                    </div>
+                    <div className="decision-detail">
+                      <span className="decision-detail-label">7-Day Demand</span>
+                      <span className="decision-detail-value">{d.predicted_7d_demand} units</span>
+                    </div>
+                    <div className="decision-detail">
+                      <span className="decision-detail-label">Restock Qty</span>
+                      <span className="decision-detail-value highlight">{d.restock_quantity} units</span>
+                    </div>
+                    <div className="decision-detail">
+                      <span className="decision-detail-label">Total Cost</span>
+                      <span className="decision-detail-value highlight">₹{d.total_cost.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <p className="decision-reason">{d.reason}</p>
+
+                  <div className="decision-payment">
+                    <div className="payment-header">💳 Payment Intent (Restricted)</div>
+                    <div className="payment-details">
+                      <span>Amount: ₹{d.total_cost.toLocaleString()} {d.payment_intent.currency}</span>
+                      <span>Purpose: {d.payment_intent.purpose}</span>
+                    </div>
+                    <div className="payment-constraints">
+                      <span>✔ Max Amount Enforced</span>
+                      <span>✔ Allowed Merchant Only</span>
+                      <span>✔ Session Key Used</span>
+                    </div>
+                    <div className="payment-status">Status: EXECUTED ✓</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

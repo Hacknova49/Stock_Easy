@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { LayoutDashboard } from "lucide-react";
 import Squares from "../components/Squares";
 import Shuffle from "../components/Shuffle";
 import "../App.css";
@@ -129,6 +131,12 @@ function Landing() {
         </section>
 
       </div>
+
+      {/* FLOATING DASHBOARD BUTTON */}
+      <Link to="/dashboard" className="floating-dashboard-btn">
+        <LayoutDashboard size={24} />
+        <span className="dashboard-tooltip">View Dashboard</span>
+      </Link>
     </div>
   );
 }
