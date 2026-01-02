@@ -125,9 +125,9 @@ function Landing() {
 
         {/* GET STARTED SECTION */}
         <section className="get-started-section">
-          <button className="demo-button get-started-button">
+          <Link to="/homepage" className="demo-button get-started-button">
             GET STARTED
-          </button>
+          </Link>
         </section>
 
       </div>

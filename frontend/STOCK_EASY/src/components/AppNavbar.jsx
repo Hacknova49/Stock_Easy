@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import GooeyNav from "./GooeyNav";
 
 const navItems = [
-  { label: "Home", path: "/" },
+  { label: "Home", path: "/homepage" },
   { label: "Dashboard", path: "/dashboard" },
   { label: "About", path: "/about" }
 ];
@@ -22,19 +22,19 @@ function AppNavbar() {
   // We set the initial state by checking the URL immediately
   const [activeIndex, setActiveIndex] = useState(getIndexFromPath);
 
-  const formattedItems = useMemo(() => 
+  const formattedItems = useMemo(() =>
     navItems.map((item, index) => ({
       label: item.label,
       href: item.path,
       onClick: (e) => {
         if (e && e.preventDefault) e.preventDefault();
-        
+
         // Update local state immediately for instant feedback
         setActiveIndex(index);
         navigate(item.path);
       },
-    })), 
-  [navigate]);
+    })),
+    [navigate]);
 
   return (
     <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-auto">
@@ -42,8 +42,8 @@ function AppNavbar() {
         <GooeyNav
           items={formattedItems}
           // Use the computed activeIndex
-          initialActiveIndex={activeIndex} 
-          activeIndex={activeIndex} 
+          initialActiveIndex={activeIndex}
+          activeIndex={activeIndex}
           particleCount={15}
           particleDistances={[90, 10]}
           particleR={100}
