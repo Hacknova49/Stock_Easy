@@ -81,7 +81,7 @@ const kernelClient = createKernelAccountClient({
     try {
         const txHash = await kernelClient.sendTransaction({
             to: "0x4C2c3EcB63647E34Bd473A1DEc2708D365806Ed2",
-            value: 0n,
+            value: parseEther("0.001"),
         });
 
         console.log(`\n✅ SUCCESS! Shopkeeper Auto-Payment is LIVE.`);
