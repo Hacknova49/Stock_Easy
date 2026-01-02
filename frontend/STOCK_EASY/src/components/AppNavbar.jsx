@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import GooeyNav from "./GooeyNav";
 
@@ -21,14 +21,6 @@ function AppNavbar() {
 
   // We set the initial state by checking the URL immediately
   const [activeIndex, setActiveIndex] = useState(getIndexFromPath);
-
-  // Sync state if the user hits "Back/Forward" in the browser
-  useEffect(() => {
-    const newIndex = getIndexFromPath();
-    if (newIndex !== activeIndex) {
-      setActiveIndex(newIndex);
-    }
-  }, [location.pathname]);
 
   const formattedItems = useMemo(() => 
     navItems.map((item, index) => ({
