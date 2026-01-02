@@ -6,41 +6,46 @@
   --purple-glow: rgba(132, 0, 255, 0.2);
   --purple-border: rgba(132, 0, 255, 0.8);
   /* Adjusted border color to be semi-transparent to match the grid theme */
-  --border-color: rgba(57, 46, 78, 0.5); 
-  --background-dark: transparent; /* Changed to transparent */
+  --border-color: rgba(255, 255, 255, 0.8);
+  --background-dark: transparent;
+  /* Changed to transparent */
   color-scheme: light dark;
 }
 
 /* --- GRID CONTAINER --- */
 .card-grid {
-  display: grid;
-  gap: 1.5rem; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
   padding: 2rem;
   max-width: 1300px;
   margin: 0 auto;
-  grid-auto-rows: minmax(220px, auto); 
   box-sizing: border-box;
   /* Ensures the grid container sits above the Squares background layer */
   position: relative;
-  z-index: 10; 
+  z-index: 10;
 }
 
 /* --- INDIVIDUAL CARDS --- */
 .magic-bento-card {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
   position: relative;
-  min-height: 220px;
-  width: 100%;
-  padding: 1.5rem;
-  border-radius: 24px;
-  border: 1px solid var(--border-color);
-  
+  min-height: 60px;
+  width: auto;
+  min-width: 180px;
+  padding: 1rem 2rem;
+  border-radius: 4px;
+  border: 2px solid var(--border-color);
+
   /* --- KEY MODIFICATIONS --- */
-  background: var(--background-dark); /* Now transparent */
+  background: var(--background-dark);
+  /* Now transparent */
   /* Adds a subtle blur so the Squares grid lines don't make text messy */
-  backdrop-filter: blur(4px); 
+  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   /* ------------------------ */
 
@@ -48,6 +53,7 @@
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-sizing: border-box;
+  cursor: pointer;
 
   --glow-x: 50%;
   --glow-y: 50%;
@@ -60,7 +66,7 @@
   /* Border color becomes more prominent on hover */
   border-color: var(--purple-primary);
   /* Optional: Adds a very slight purple tint on hover */
-  background: rgba(132, 0, 255, 0.03); 
+  background: rgba(132, 0, 255, 0.1);
 }
 
 /* --- CARD CONTENT LAYOUT --- */
@@ -69,27 +75,30 @@
   display: flex;
   position: relative;
   color: var(--white);
-  z-index: 2; 
+  z-index: 2;
 }
 
 .magic-bento-card__header {
   gap: 0.75em;
-  justify-content: space-between;
-  margin-bottom: 1rem;
+  justify-content: center;
+  margin-bottom: 0;
 }
 
 .magic-bento-card__content {
   flex-direction: column;
-  margin-top: auto; 
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .magic-bento-card__title {
-  font-weight: 500;
+  font-weight: 700;
   font-size: 1.1rem;
-  margin: 0 0 0.4em;
-  letter-spacing: -0.01em;
+  margin: 0;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   /* Helps text pop against a transparent background */
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5); 
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
 .magic-bento-card__description {
@@ -98,45 +107,16 @@
   opacity: 0.8;
 }
 
+.magic-bento-card__label {
+  display: none;
+}
+
 /* --- RESPONSIVE LAYOUT LOGIC --- */
 
 @media (max-width: 599px) {
   .card-grid {
-    grid-template-columns: 1fr;
     padding: 1rem;
     gap: 1rem;
-  }
-}
-
-@media (min-width: 600px) and (max-width: 1023px) {
-  .card-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .card-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .magic-bento-card:nth-child(3) {
-    grid-column: span 2;
-    grid-row: span 2;
-  }
-
-  .magic-bento-card:nth-child(4) {
-    grid-column: span 2;
-    grid-row: span 2;
-  }
-
-  .magic-bento-card:nth-child(5) {
-    grid-column: 3;
-    grid-row: 3;
-  }
-
-  .magic-bento-card:nth-child(6) {
-    grid-column: 4;
-    grid-row: 3;
   }
 }
 
@@ -145,12 +125,10 @@
   content: '';
   position: absolute;
   inset: 0;
-  padding: 4px; 
-  background: radial-gradient(
-    var(--glow-radius) circle at var(--glow-x) var(--glow-y),
-    rgba(132, 0, 255, calc(var(--glow-intensity) * 0.8)) 0%,
-    transparent 70%
-  );
+  padding: 4px;
+  background: radial-gradient(var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+      rgba(132, 0, 255, calc(var(--glow-intensity) * 0.8)) 0%,
+      transparent 70%);
   border-radius: inherit;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -164,5 +142,5 @@
   position: relative;
   user-select: none;
   /* Transparent so the Squares component underneath is visible */
-  background: transparent; 
+  background: transparent;
 }

@@ -4,10 +4,11 @@
   word-wrap: break-word;
   will-change: transform;
   line-height: 1;
-  font-size: 4rem;
+  font-size: inherit;
   font-family: 'Press Start 2P', sans-serif;
   text-transform: uppercase;
   visibility: hidden;
+  margin: 0;
 }
 
 .shuffle-parent.is-ready {
@@ -21,7 +22,7 @@
   position: relative;
 }
 
-.shuffle-char-wrapper > span {
+.shuffle-char-wrapper>span {
   display: inline-flex;
   will-change: transform;
 }
