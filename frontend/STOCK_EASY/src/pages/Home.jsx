@@ -146,7 +146,7 @@ function Home() {
                             <p className="card-footer-text">Rules are enforced automatically. The AI cannot exceed them.</p>
                         </div>
 
-                        {/* Activity Summary Card */}
+                        {/* Activity Summary Card
                         <div className="stat-card summary-card">
                             <div className="card-header">
                                 <TrendingUp size={20} className="card-icon purple" />
@@ -166,7 +166,7 @@ function Home() {
                                     <span className="stat-label">Actions blocked by policy</span>
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Stock Health Card */}
                         <div className="stat-card health-card">

@@ -25,16 +25,17 @@ const defaultConfig = {
     minDemand: 5, // matches min_demand_threshold in default_config.py
 
     suppliers: [
-        { id: "SUP1", address: "0x11....111", status: "Allowed", allocation: 100 },
-        { id: "SUP2", address: "0x22....222", status: "Allowed", allocation: 100 },
-        { id: "SUP3", address: "0x33....333", status: "Allowed", allocation: 100 },
+        { id: "SUP1", address: "0x4C2c3EcB63647E34Bd473A1DEc2708D365806Ed2", status: "Allowed", allocation: 100 },
+        { id: "SUP2", address: "0x4C2c3EcB63647E34Bd473A1DEc2708D365806Ed2", status: "Allowed", allocation: 100 },
+        { id: "SUP3", address: "0x4C2c3EcB63647E34Bd473A1DEc2708D365806Ed2", status: "Allowed", allocation: 100 },
     ],
 
-    alerts: {
-        dailyLimitReached: true,
-        criticalStockAlert: true,
-        monthlyBudgetThreshold: 80,
-    }
+    // Matches supplier_budget_split in default_config.py
+    supplierBudgetSplit: {
+        SUP1: 30,
+        SUP2: 40,
+        SUP3: 30,
+    },
 };
 
 function ControlPanel() {
@@ -81,6 +82,14 @@ function ControlPanel() {
 
     const toggleEditSupplier = (supplierId) => {
         setEditingSupplier(editingSupplier === supplierId ? null : supplierId);
+    };
+
+    const handleBudgetSplitChange = (supplierId, value) => {
+        const numValue = parseInt(value) || 0;
+        setConfig({
+            ...config,
+            supplierBudgetSplit: { ...config.supplierBudgetSplit, [supplierId]: numValue }
+        });
     };
     const saveConfigToBackend = async () => {
         try {
@@ -230,64 +239,63 @@ function ControlPanel() {
                         ))}
                     </div>
 
-                    <div className="cp-allocation-section">
-                        <div className="cp-allocation-label">
-                            <span>Budget Allocation:</span>
-                            <span className="allocation-value">SUP1 <span className="allocation-bar"><span style={{ width: '70%' }}></span></span> 70%</span>
-                        </div>
-                    </div>
                 </div>
 
-                {/* Safety Controls */}
+                {/* Supplier Budget Split */}
                 <div className="cp-card">
                     <h2 className="cp-card-title">
-                        <Shield size={20} className="card-icon orange" />
-                        Safety Controls
+                        <Wallet size={20} className="card-icon green" />
+                        Supplier Budget Split
                     </h2>
 
                     <p className="cp-card-description">
-                        Use the button below to immediately pause all AI spending activity.
+                        Allocate what percentage of your monthly budget goes to each supplier.
                     </p>
 
-                    <button className="cp-danger-btn">
-                        Pause AI Spending Session
-                    </button>
+                    <div className="cp-budget-split-list">
+                        {Object.entries(config.supplierBudgetSplit).map(([supplierId, percentage]) => (
+                            <div key={supplierId} className="cp-budget-split-row">
+                                <span className="supplier-id">{supplierId}</span>
+                                <div className="cp-number-input">
+                                    <input
+                                        type="number"
+                                        value={percentage}
+                                        onChange={(e) => handleBudgetSplitChange(supplierId, e.target.value)}
+                                        min="0"
+                                        max="100"
+                                    />
+                                    <span className="unit">%</span>
+                                </div>
+                                <div className="allocation-bar-wrapper">
+                                    <div className="allocation-bar-fill" style={{ width: `${percentage}%` }}></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="cp-total-allocation">
+                        <span>Total:</span>
+                        <span className={Object.values(config.supplierBudgetSplit).reduce((a, b) => a + b, 0) === 100 ? 'valid' : 'invalid'}>
+                            {Object.values(config.supplierBudgetSplit).reduce((a, b) => a + b, 0)}%
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            {/* Alerts & Notifications */}
+            {/* Safety Controls */}
             <div className="cp-card full-width">
                 <h2 className="cp-card-title">
-                    <Bell size={20} className="card-icon yellow" />
-                    Alerts & Notifications
+                    <Shield size={20} className="card-icon orange" />
+                    Safety Controls
                 </h2>
 
-                <div className="cp-alerts-row">
-                    <label className="cp-checkbox">
-                        <input
-                            type="checkbox"
-                            checked={config.alerts.dailyLimitReached}
-                            onChange={() => handleAlertToggle('dailyLimitReached')}
-                        />
-                        <span className="checkmark"></span>
-                        Daily limit reached
-                    </label>
+                <p className="cp-card-description">
+                    Use the button below to immediately pause all AI spending activity.
+                </p>
 
-                    <label className="cp-checkbox">
-                        <input
-                            type="checkbox"
-                            checked={config.alerts.criticalStockAlert}
-                            onChange={() => handleAlertToggle('criticalStockAlert')}
-                        />
-                        <span className="checkmark"></span>
-                        Critical stock alert
-                    </label>
-
-                    <div className="cp-alert-indicator">
-                        <span className="alert-icon warning">⚠</span>
-                        Monthly budget {config.alerts.monthlyBudgetThreshold}% used
-                    </div>
-                </div>
+                <button className="cp-danger-btn">
+                    Pause AI Spending Session
+                </button>
             </div>
 
             {/* Save Changes Button */}
