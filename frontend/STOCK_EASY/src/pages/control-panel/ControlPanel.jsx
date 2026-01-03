@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import "./controlPanel.css";
 
-const API_BASE_URL = "http://localhost:8001";
+const API_BASE_URL = "http://localhost:8000";
 
 // Default configuration (matching ai/default_config.py structure)
 const defaultConfig = {
