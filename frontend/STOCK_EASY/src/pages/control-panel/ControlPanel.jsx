@@ -301,50 +301,16 @@ function ControlPanel() {
                     </div>
                 </div>
 
-                {/* Session & Safety Controls */}
+                {/* Safety Controls */}
                 <div className="cp-card">
                     <h2 className="cp-card-title">
                         <Shield size={20} className="card-icon orange" />
-                        Session & Safety Controls
+                        Safety Controls
                     </h2>
 
-                    <div className="cp-form-row">
-                        <label>Session Duration:</label>
-                        <div className="cp-dropdown-wrapper small">
-                            <button
-                                className="cp-dropdown-trigger"
-                                onClick={() => handleDropdownToggle('sessionDuration')}
-                            >
-                                <span className="value">{config.sessionDuration}</span>
-                                <ChevronDown size={16} className={`chevron ${openDropdown === 'sessionDuration' ? 'open' : ''}`} />
-                            </button>
-                            {openDropdown === 'sessionDuration' && (
-                                <div className="cp-dropdown-menu">
-                                    {sessionOptions.map(opt => (
-                                        <div
-                                            key={opt}
-                                            className="cp-dropdown-item"
-                                            onClick={() => handleSelectOption('sessionDuration', opt)}
-                                        >
-                                            {opt}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="cp-form-row checkbox-row">
-                        <label className="cp-checkbox">
-                            <input
-                                type="checkbox"
-                                checked={config.autoRotateKeys}
-                                onChange={() => handleToggle('autoRotateKeys')}
-                            />
-                            <span className="checkmark"></span>
-                            Auto-Rotate Session Keys
-                        </label>
-                    </div>
+                    <p className="cp-card-description">
+                        Use the button below to immediately pause all AI spending activity.
+                    </p>
 
                     <button className="cp-danger-btn">
                         Pause AI Spending Session
