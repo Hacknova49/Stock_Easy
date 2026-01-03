@@ -1,12 +1,13 @@
-# ai/api.py
-
 import sys
 import os
 from typing import Optional
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 import requests
+import pandas as pd
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
 from ai.notifier import send_whatsapp_message
 
@@ -20,10 +21,10 @@ if BASE_DIR not in sys.path:
 # -------------------------------------------------
 # Internal imports
 # -------------------------------------------------
+from backend.payments import send_payment
 from ai.restock_agent import run_agent
 from ai.default_config import DEFAULT_CONFIG
 from backend.config_mapper import frontend_to_agent_config
-from backend.payments import send_payment
 
 # -------------------------------------------------
 # GLOBAL STATE (SINGLE PROCESS)
@@ -34,7 +35,7 @@ TRANSACTIONS = []
 # -------------------------------------------------
 # Conversion rate (POL → INR)
 # -------------------------------------------------
-POL_TO_INR = 150000  # demo value
+POL_TO_INR = 150_000  # demo value
 
 # -------------------------------------------------
 # FastAPI app
@@ -53,47 +54,31 @@ app.add_middleware(
 )
 
 # =================================================
-# CONFIG ENDPOINTS (MERGED BACKEND)
+# CONFIG ENDPOINTS
 # =================================================
 
 @app.post("/api/agent/config")
 def save_agent_config(config: dict):
-    """
-    Saves frontend config in memory.
-    This is the SINGLE source of truth.
-    """
+    """Save frontend config in memory"""
     global CURRENT_CONFIG
     CURRENT_CONFIG = config
-    return {
-        "status": "ok",
-        "message": "User config saved successfully"
-    }
-
+    return {"status": "ok", "message": "User config saved successfully"}
 
 @app.get("/api/agent/config")
 def get_agent_config():
-    """
-    Debug / inspection endpoint
-    """
-    return {
-        "has_config": CURRENT_CONFIG is not None,
-        "config": CURRENT_CONFIG
-    }
+    """Debug / inspect current config"""
+    return {"has_config": CURRENT_CONFIG is not None, "config": CURRENT_CONFIG}
 
 # -------------------------------------------------
 # Helper: resolve final agent config
 # -------------------------------------------------
 def get_final_agent_config() -> dict:
-    """
-    If user config exists -> use it
-    Else -> fallback to DEFAULT_CONFIG
-    """
+    """Return merged config: user config overrides defaults"""
     if CURRENT_CONFIG:
         user_cfg = frontend_to_agent_config(CURRENT_CONFIG)
         final_cfg = {**DEFAULT_CONFIG, **user_cfg}
         print("🧠 Using USER CONFIG:", final_cfg["monthly_budget"])
         return final_cfg
-
     print("🧠 Using DEFAULT CONFIG:", DEFAULT_CONFIG["monthly_budget"])
     return DEFAULT_CONFIG
 
@@ -106,17 +91,14 @@ def format_order_summary(restock_result: dict) -> str:
         int(d.get("payment_intent", {}).get("amount_wei", 0))
         for d in decisions
     )
-
     total_pol = total_spent_wei / 1e18
     total_inr = total_pol * POL_TO_INR
 
     lines = ["✅ StockEasy Order Summary\n"]
-
     for d in decisions:
         qty = d.get("restock_quantity", 0)
         if qty > 0:
             lines.append(f"- {d.get('product')} x{qty}")
-
     lines.append(f"\n💰 Total Bill: ₹{total_inr:,.2f}")
     return "\n".join(lines)
 
@@ -128,10 +110,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 def auto_run():
     try:
         print("🔁 Auto-running restock + payments")
-        requests.post(
-            f"{API_BASE_URL}/run-restock?execute_payments=true",
-            timeout=30
-        )
+        requests.post(f"{API_BASE_URL}/run-restock?execute_payments=true", timeout=30)
     except Exception as e:
         print("❌ Auto-run error:", e)
 
@@ -139,8 +118,7 @@ scheduler = BackgroundScheduler()
 
 @app.on_event("startup")
 def start_scheduler():
-    # Change interval when ready
-    scheduler.add_job(auto_run, "interval", minutes=1000)
+    scheduler.add_job(auto_run, "interval", minutes=1)
     scheduler.start()
     print("🟢 Scheduler started")
 
@@ -183,10 +161,8 @@ def run_restock(execute_payments: bool = False):
     for decision in result["decisions"]:
         intent = decision.get("payment_intent", {})
         amount = int(intent.get("amount_wei", 0))
-
         if amount <= 0:
             continue
-
         if amount > USER_BALANCE_WEI - total_spent:
             print(f"⚠️ Skipping {decision['product']} (insufficient balance)")
             continue
@@ -200,9 +176,7 @@ def run_restock(execute_payments: bool = False):
         decision["tx_hash"] = tx_info["tx_hash"]
         total_spent += amount
         successful_txs += 1
-        items_ordered.append(
-            f"- {decision['product']} x{decision['restock_quantity']}"
-        )
+        items_ordered.append(f"- {decision['product']} x{decision['restock_quantity']}")
 
         TRANSACTIONS.append({
             "cycle_id": result["cycle_id"],
@@ -236,15 +210,15 @@ def run_restock(execute_payments: bool = False):
 # =================================================
 @app.get("/transactions")
 def get_transactions():
-    return {
-        "count": len(TRANSACTIONS),
-        "transactions": TRANSACTIONS,
-    }
+    return {"count": len(TRANSACTIONS), "transactions": TRANSACTIONS}
 
 # =================================================
 # WHATSAPP TEST
 # =================================================
 @app.get("/test-whatsapp")
 def test_whatsapp():
-    send_whatsapp_message("✅ Test message: StockEasy WhatsApp is working!")
-    return {"status": "WhatsApp test message sent"}
+    try:
+        send_whatsapp_message("✅ Test message: StockEasy WhatsApp is working!")
+        return {"status": "WhatsApp test message sent"}
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
