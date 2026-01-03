@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import "./controlPanel.css";
 
+const API_BASE_URL = "http://localhost:8001";
+
 // Default configuration (matching ai/default_config.py structure)
 const defaultConfig = {
     monthlyBudget: 50000,
@@ -87,6 +89,26 @@ function ControlPanel() {
                 : s
         );
         setConfig({ ...config, suppliers: updatedSuppliers });
+    };
+    const saveConfigToBackend = async () => {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/agent/config`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(config)
+        });
+
+        if (!res.ok) {
+        throw new Error("Failed to save config");
+        }
+
+        alert("Configuration saved successfully");
+    } catch (err) {
+        console.error(err);
+        alert("Error saving configuration");
+    }
     };
 
     const usagePercentage = ((config.monthlyUsed / config.monthlyTotal) * 100).toFixed(0);
@@ -355,7 +377,7 @@ function ControlPanel() {
 
             {/* Save Changes Button */}
             <div className="cp-save-section">
-                <button className="cp-save-btn">
+                <button className="cp-save-btn" onClick={saveConfigToBackend}>
                     <Save size={18} />
                     Save Changes
                 </button>
