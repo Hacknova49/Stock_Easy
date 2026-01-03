@@ -112,7 +112,9 @@ function ControlPanel() {
         }
     };
 
-    const usagePercentage = ((config.monthlyUsed / config.monthlyTotal) * 100).toFixed(0);
+    const usagePercentage = config.monthlyBudget > 0
+        ? ((config.monthlyUsed / config.monthlyBudget) * 100).toFixed(0)
+        : 0;
 
     return (
         <div className="control-panel-page">
@@ -153,7 +155,7 @@ function ControlPanel() {
                     <div className="cp-progress-section">
                         <div className="cp-progress-label">
                             <span>This Month:</span>
-                            <span>₹{config.monthlyUsed.toLocaleString()} / ₹{config.monthlyTotal.toLocaleString()} used</span>
+                            <span>₹{config.monthlyUsed.toLocaleString()} / ₹{config.monthlyBudget.toLocaleString()} used</span>
                         </div>
                         <div className="cp-progress-bar">
                             <div
