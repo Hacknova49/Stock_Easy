@@ -245,21 +245,28 @@
     gap: 0.5rem;
 }
 
+.cp-number-input .currency-prefix {
+    color: #8080a0;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
 .cp-number-input input {
-    width: 60px;
+    width: 120px;
     background: rgba(30, 30, 60, 0.6);
     border: 1px solid rgba(80, 80, 140, 0.3);
     border-radius: 6px;
     padding: 0.5rem 0.75rem;
     color: #ffffff;
     font-size: 0.9rem;
-    text-align: center;
+    text-align: right;
     transition: border-color 0.2s ease;
 }
 
 .cp-number-input input:focus {
     outline: none;
-    border-color: rgba(139, 92, 246, 0.6);
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
 .cp-number-input input::-webkit-inner-spin-button,
@@ -325,6 +332,65 @@
     color: #6b6b8a;
     font-family: monospace;
     flex: 1;
+}
+
+.supplier-address-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.supplier-address-input {
+    flex: 1;
+    background: rgba(30, 30, 60, 0.4);
+    border: 1px solid rgba(80, 80, 140, 0.2);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    color: #6b6b8a;
+    font-size: 0.85rem;
+    font-family: monospace;
+    transition: all 0.2s ease;
+}
+
+.supplier-address-input:disabled {
+    background: transparent;
+    border-color: transparent;
+    cursor: default;
+}
+
+.supplier-address-input.editing {
+    background: rgba(30, 30, 60, 0.6);
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    cursor: text;
+}
+
+.supplier-address-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.supplier-edit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: rgba(80, 80, 140, 0.2);
+    border: 1px solid rgba(80, 80, 140, 0.3);
+    border-radius: 6px;
+    color: #8080a0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.supplier-edit-btn:hover {
+    background: rgba(139, 92, 246, 0.3);
+    border-color: rgba(139, 92, 246, 0.5);
+    color: #a78bfa;
 }
 
 .supplier-status {

@@ -39,17 +39,6 @@
   letter-spacing: 0.02em;
 }
 
-.brand-badge {
-  padding: 0.3rem 0.75rem;
-  background: linear-gradient(135deg, rgba(138, 100, 255, 0.2) 0%, rgba(100, 80, 200, 0.2) 100%);
-  border: 1px solid rgba(138, 100, 255, 0.3);
-  border-radius: 20px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #a0a0ff;
-  letter-spacing: 0.05em;
-}
-
 /* Navigation */
 .main-nav {
   display: flex;
@@ -178,6 +167,42 @@
   padding: 2rem;
 }
 
+/* Loading and Error States */
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  color: #8090a0;
+  font-size: 1rem;
+}
+
+.error-state {
+  color: #f87171;
+}
+
+.error-state svg {
+  opacity: 0.8;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  color: #60a5fa;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -249,6 +274,12 @@
   background: rgba(34, 197, 94, 0.15);
   color: #4ade80;
   border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-indicator.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .status-details {

@@ -7,9 +7,9 @@ import {
     Users,
     Shield,
     Bell,
-    ChevronDown,
-    ChevronUp,
-    Save
+    Save,
+    Pencil,
+    Check
 } from "lucide-react";
 import "./controlPanel.css";
 
@@ -17,25 +17,18 @@ const API_BASE_URL = "http://localhost:8001";
 
 // Default configuration (matching ai/default_config.py structure)
 const defaultConfig = {
-    monthlyBudget: 50000,
-    maxPerTransaction: 1000,
-    dailySpendLimit: 5000,
+    monthlyBudget: 500000,
     monthlyUsed: 18420,
-    monthlyTotal: 50000,
+    monthlyTotal: 500000,
 
-    bufferStock: 5,
-    minDailyDemand: 10,
-    demandSensitivity: "Medium",
-    minRestockQuantity: 5,
+    bufferStock: 7,
+    minDemand: 5, // matches min_demand_threshold in default_config.py
 
     suppliers: [
-        { id: "SUP1", address: "0xA3F....92D", status: "Allowed", allocation: 70 },
-        { id: "SUP2", address: "0x91B....33E", status: "Allowed", allocation: 20 },
-        { id: "SUP3", address: "0xC7E....A1F", status: "Revoked", allocation: 10 },
+        { id: "SUP1", address: "0x11....111", status: "Allowed", allocation: 100 },
+        { id: "SUP2", address: "0x22....222", status: "Allowed", allocation: 100 },
+        { id: "SUP3", address: "0x33....333", status: "Allowed", allocation: 100 },
     ],
-
-    sessionDuration: "24 hours",
-    autoRotateKeys: true,
 
     alerts: {
         dailyLimitReached: true,
@@ -46,21 +39,7 @@ const defaultConfig = {
 
 function ControlPanel() {
     const [config, setConfig] = useState(defaultConfig);
-    const [openDropdown, setOpenDropdown] = useState(null);
-
-    const budgetOptions = [10000, 25000, 50000, 100000, 250000, 500000];
-    const transactionOptions = [500, 1000, 2500, 5000, 10000];
-    const dailyLimitOptions = [1000, 2500, 5000, 10000, 25000];
-    const sessionOptions = ["1 hour", "6 hours", "12 hours", "24 hours", "48 hours", "7 days"];
-
-    const handleDropdownToggle = (dropdownName) => {
-        setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
-    };
-
-    const handleSelectOption = (field, value) => {
-        setConfig({ ...config, [field]: value });
-        setOpenDropdown(null);
-    };
+    const [editingSupplier, setEditingSupplier] = useState(null);
 
     const handleNumberInput = (field, value) => {
         const numValue = parseInt(value) || 0;
@@ -90,25 +69,38 @@ function ControlPanel() {
         );
         setConfig({ ...config, suppliers: updatedSuppliers });
     };
+
+    const handleSupplierAddressChange = (supplierId, newAddress) => {
+        const updatedSuppliers = config.suppliers.map(s =>
+            s.id === supplierId
+                ? { ...s, address: newAddress }
+                : s
+        );
+        setConfig({ ...config, suppliers: updatedSuppliers });
+    };
+
+    const toggleEditSupplier = (supplierId) => {
+        setEditingSupplier(editingSupplier === supplierId ? null : supplierId);
+    };
     const saveConfigToBackend = async () => {
-    try {
-        const res = await fetch(`${API_BASE_URL}/api/agent/config`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(config)
-        });
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/agent/config`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(config)
+            });
 
-        if (!res.ok) {
-        throw new Error("Failed to save config");
+            if (!res.ok) {
+                throw new Error("Failed to save config");
+            }
+
+            alert("Configuration saved successfully");
+        } catch (err) {
+            console.error(err);
+            alert("Error saving configuration");
         }
-
-        alert("Configuration saved successfully");
-    } catch (err) {
-        console.error(err);
-        alert("Error saving configuration");
-    }
     };
 
     const usagePercentage = ((config.monthlyUsed / config.monthlyTotal) * 100).toFixed(0);
@@ -136,84 +128,16 @@ function ControlPanel() {
                         Budget & Spending Limits
                     </h2>
 
-                    <div className="cp-form-group">
-                        <label>Monthly Budget</label>
-                        <div className="cp-dropdown-wrapper">
-                            <button
-                                className="cp-dropdown-trigger"
-                                onClick={() => handleDropdownToggle('monthlyBudget')}
-                            >
-                                <span className="currency">₹</span>
-                                <span className="value">{config.monthlyBudget.toLocaleString()}</span>
-                                <ChevronDown size={16} className={`chevron ${openDropdown === 'monthlyBudget' ? 'open' : ''}`} />
-                            </button>
-                            {openDropdown === 'monthlyBudget' && (
-                                <div className="cp-dropdown-menu">
-                                    {budgetOptions.map(opt => (
-                                        <div
-                                            key={opt}
-                                            className="cp-dropdown-item"
-                                            onClick={() => handleSelectOption('monthlyBudget', opt)}
-                                        >
-                                            ₹{opt.toLocaleString()}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="cp-form-group">
-                        <label>Max per Transaction</label>
-                        <div className="cp-dropdown-wrapper">
-                            <button
-                                className="cp-dropdown-trigger"
-                                onClick={() => handleDropdownToggle('maxPerTransaction')}
-                            >
-                                <span className="currency">₹</span>
-                                <span className="value">{config.maxPerTransaction.toLocaleString()}</span>
-                                <ChevronDown size={16} className={`chevron ${openDropdown === 'maxPerTransaction' ? 'open' : ''}`} />
-                            </button>
-                            {openDropdown === 'maxPerTransaction' && (
-                                <div className="cp-dropdown-menu">
-                                    {transactionOptions.map(opt => (
-                                        <div
-                                            key={opt}
-                                            className="cp-dropdown-item"
-                                            onClick={() => handleSelectOption('maxPerTransaction', opt)}
-                                        >
-                                            ₹{opt.toLocaleString()}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="cp-form-group">
-                        <label>Daily Spend Limit</label>
-                        <div className="cp-dropdown-wrapper">
-                            <button
-                                className="cp-dropdown-trigger"
-                                onClick={() => handleDropdownToggle('dailySpendLimit')}
-                            >
-                                <span className="currency">₹</span>
-                                <span className="value">{config.dailySpendLimit.toLocaleString()}</span>
-                                <ChevronDown size={16} className={`chevron ${openDropdown === 'dailySpendLimit' ? 'open' : ''}`} />
-                            </button>
-                            {openDropdown === 'dailySpendLimit' && (
-                                <div className="cp-dropdown-menu">
-                                    {dailyLimitOptions.map(opt => (
-                                        <div
-                                            key={opt}
-                                            className="cp-dropdown-item"
-                                            onClick={() => handleSelectOption('dailySpendLimit', opt)}
-                                        >
-                                            ₹{opt.toLocaleString()}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                    <div className="cp-form-row">
+                        <label>Monthly Budget:</label>
+                        <div className="cp-number-input">
+                            <span className="currency-prefix">₹</span>
+                            <input
+                                type="number"
+                                value={config.monthlyBudget}
+                                onChange={(e) => handleNumberInput('monthlyBudget', e.target.value)}
+                                min="0"
+                            />
                         </div>
                     </div>
 
@@ -252,40 +176,12 @@ function ControlPanel() {
                     </div>
 
                     <div className="cp-form-row">
-                        <label>Min Daily Demand:</label>
+                        <label>Min Demand:</label>
                         <div className="cp-number-input">
                             <input
                                 type="number"
-                                value={config.minDailyDemand}
-                                onChange={(e) => handleNumberInput('minDailyDemand', e.target.value)}
-                                min="1"
-                            />
-                            <span className="unit">units/day</span>
-                        </div>
-                    </div>
-
-                    <div className="cp-form-row">
-                        <label>Demand Sensitivity:</label>
-                        <div className="cp-toggle-group">
-                            {["Low", "Medium", "High"].map(level => (
-                                <button
-                                    key={level}
-                                    className={`cp-toggle-btn ${config.demandSensitivity === level ? 'active' : ''}`}
-                                    onClick={() => handleSensitivityChange(level)}
-                                >
-                                    {level}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="cp-form-row">
-                        <label>Min Restock Quantity:</label>
-                        <div className="cp-number-input">
-                            <input
-                                type="number"
-                                value={config.minRestockQuantity}
-                                onChange={(e) => handleNumberInput('minRestockQuantity', e.target.value)}
+                                value={config.minDemand}
+                                onChange={(e) => handleNumberInput('minDemand', e.target.value)}
                                 min="1"
                             />
                             <span className="unit">units</span>
@@ -304,7 +200,26 @@ function ControlPanel() {
                         {config.suppliers.map(supplier => (
                             <div key={supplier.id} className="cp-supplier-row">
                                 <span className="supplier-id">{supplier.id}</span>
-                                <span className="supplier-address">{supplier.address}</span>
+                                <div className="supplier-address-wrapper">
+                                    <input
+                                        type="text"
+                                        className={`supplier-address-input ${editingSupplier === supplier.id ? 'editing' : ''}`}
+                                        value={supplier.address}
+                                        onChange={(e) => handleSupplierAddressChange(supplier.id, e.target.value)}
+                                        disabled={editingSupplier !== supplier.id}
+                                    />
+                                    <button
+                                        className="supplier-edit-btn"
+                                        onClick={() => toggleEditSupplier(supplier.id)}
+                                        title={editingSupplier === supplier.id ? "Save address" : "Edit address"}
+                                    >
+                                        {editingSupplier === supplier.id ? (
+                                            <Check size={14} />
+                                        ) : (
+                                            <Pencil size={14} />
+                                        )}
+                                    </button>
+                                </div>
                                 <button
                                     className={`supplier-status ${supplier.status.toLowerCase()}`}
                                     onClick={() => toggleSupplierStatus(supplier.id)}
