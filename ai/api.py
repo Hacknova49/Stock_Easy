@@ -9,7 +9,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import requests
 
 from ai.notifier import send_whatsapp_message
-
+print("hello")
 # -------------------------------------------------
 # Fix Python path (ADD PROJECT ROOT)
 # -------------------------------------------------
