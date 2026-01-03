@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
     Bell,
@@ -12,11 +12,51 @@ import {
     CheckCircle,
     XCircle,
     Clock,
-    Zap
+    Zap,
+    Loader
 } from "lucide-react";
 import "./Home.css";
 
+// Dashboard stats service (runs on port 8002)
+const DASHBOARD_API_URL = "http://localhost:8002";
+
 function Home() {
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        fetchDashboardStats();
+        // Refresh stats every 30 seconds
+        const interval = setInterval(fetchDashboardStats, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const fetchDashboardStats = async () => {
+        try {
+            const response = await fetch(`${DASHBOARD_API_URL}/api/dashboard/stats`);
+            if (!response.ok) throw new Error("Failed to fetch stats");
+            const data = await response.json();
+            setStats(data);
+            setError(null);
+        } catch (err) {
+            console.error("Error fetching dashboard stats:", err);
+            setError("Failed to load dashboard data");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Format currency
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    };
+
     return (
         <div className="home-dashboard">
             {/* Header */}
@@ -24,7 +64,6 @@ function Home() {
                 <div className="header-content">
                     <div className="brand-section">
                         <h1 className="brand-title">Stock Easy</h1>
-                        <span className="brand-badge">AI Powered</span>
                     </div>
 
                     {/* Navigation */}
@@ -66,83 +105,95 @@ function Home() {
 
             {/* Stats Grid */}
             <section className="stats-section">
-                <div className="stats-grid">
-                    {/* AI Status Card */}
-                    <div className="stat-card status-card">
-                        <div className="card-header">
-                            <Activity size={20} className="card-icon cyan" />
-                            <h3>AI Status</h3>
-                        </div>
-                        <div className="status-content">
-                            <div className="status-indicator active">
-                                <CheckCircle size={16} />
-                                <span>ACTIVE</span>
-                            </div>
-                            <div className="status-details">
-                                <div className="status-row">
-                                    <span className="label">Valid until</span>
-                                    <span className="value">Today, 6:30 PM</span>
-                                </div>
-                                <div className="status-row">
-                                    <span className="label">Daily limit</span>
-                                    <span className="value">₹1,000</span>
-                                </div>
-                                <div className="status-row">
-                                    <span className="label">Monthly limit</span>
-                                    <span className="value">₹100,000</span>
-                                </div>
-                            </div>
-                        </div>
-                        <p className="card-footer-text">Rules are enforced automatically. The AI cannot exceed them.</p>
+                {loading ? (
+                    <div className="loading-state">
+                        <Loader size={32} className="spinner" />
+                        <span>Loading dashboard data...</span>
                     </div>
+                ) : error ? (
+                    <div className="error-state">
+                        <AlertTriangle size={24} />
+                        <span>{error}</span>
+                    </div>
+                ) : (
+                    <div className="stats-grid">
+                        {/* AI Status Card */}
+                        <div className="stat-card status-card">
+                            <div className="card-header">
+                                <Activity size={20} className="card-icon cyan" />
+                                <h3>AI Status</h3>
+                            </div>
+                            <div className="status-content">
+                                <div className={`status-indicator ${stats?.aiStatus?.isActive ? 'active' : 'inactive'}`}>
+                                    {stats?.aiStatus?.isActive ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                                    <span>{stats?.aiStatus?.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
+                                </div>
+                                <div className="status-details">
+                                    <div className="status-row">
+                                        <span className="label">Monthly Budget</span>
+                                        <span className="value">{formatCurrency(stats?.aiStatus?.monthlyBudget || 0)}</span>
+                                    </div>
+                                    <div className="status-row">
+                                        <span className="label">Budget Used</span>
+                                        <span className="value">{formatCurrency(stats?.aiStatus?.budgetUsed || 0)}</span>
+                                    </div>
+                                    <div className="status-row">
+                                        <span className="label">Remaining</span>
+                                        <span className="value">{formatCurrency(stats?.aiStatus?.budgetRemaining || 0)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="card-footer-text">Rules are enforced automatically. The AI cannot exceed them.</p>
+                        </div>
 
-                    {/* Activity Summary Card */}
-                    <div className="stat-card summary-card">
-                        <div className="card-header">
-                            <TrendingUp size={20} className="card-icon purple" />
-                            <h3>Today's Activity</h3>
+                        {/* Activity Summary Card */}
+                        <div className="stat-card summary-card">
+                            <div className="card-header">
+                                <TrendingUp size={20} className="card-icon purple" />
+                                <h3>Today's Activity</h3>
+                            </div>
+                            <div className="summary-content">
+                                <div className="summary-stat">
+                                    <span className="stat-number">{stats?.todayActivity?.actionsExecuted || 0}</span>
+                                    <span className="stat-label">AI actions executed</span>
+                                </div>
+                                <div className="summary-stat highlight">
+                                    <span className="stat-number">{formatCurrency(stats?.todayActivity?.totalSpent || 0)}</span>
+                                    <span className="stat-label">Total spent today</span>
+                                </div>
+                                <div className="summary-stat warning">
+                                    <span className="stat-number">{stats?.todayActivity?.actionsBlocked || 0}</span>
+                                    <span className="stat-label">Actions blocked by policy</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="summary-content">
-                            <div className="summary-stat">
-                                <span className="stat-number">6</span>
-                                <span className="stat-label">AI actions executed</span>
-                            </div>
-                            <div className="summary-stat highlight">
-                                <span className="stat-number">₹3,500</span>
-                                <span className="stat-label">Total spent today</span>
-                            </div>
-                            <div className="summary-stat warning">
-                                <span className="stat-number">1</span>
-                                <span className="stat-label">Actions blocked by policy</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Stock Health Card */}
-                    <div className="stat-card health-card">
-                        <div className="card-header">
-                            <Bell size={20} className="card-icon orange" />
-                            <h3>Stock Health</h3>
-                        </div>
-                        <div className="health-content">
-                            <div className="health-item healthy">
-                                <CheckCircle size={18} />
-                                <span className="count">18</span>
-                                <span className="label">Healthy items</span>
+                        {/* Stock Health Card */}
+                        <div className="stat-card health-card">
+                            <div className="card-header">
+                                <Bell size={20} className="card-icon orange" />
+                                <h3>Stock Health</h3>
                             </div>
-                            <div className="health-item low">
-                                <AlertTriangle size={18} />
-                                <span className="count">3</span>
-                                <span className="label">Low stock</span>
-                            </div>
-                            <div className="health-item critical">
-                                <XCircle size={18} />
-                                <span className="count">1</span>
-                                <span className="label">Critical</span>
+                            <div className="health-content">
+                                <div className="health-item healthy">
+                                    <CheckCircle size={18} />
+                                    <span className="count">{stats?.stockHealth?.healthy || 0}</span>
+                                    <span className="label">Healthy items</span>
+                                </div>
+                                <div className="health-item low">
+                                    <AlertTriangle size={18} />
+                                    <span className="count">{stats?.stockHealth?.low || 0}</span>
+                                    <span className="label">Low stock</span>
+                                </div>
+                                <div className="health-item critical">
+                                    <XCircle size={18} />
+                                    <span className="count">{stats?.stockHealth?.critical || 0}</span>
+                                    <span className="label">Critical</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                )}
             </section>
 
             {/* Recent Actions Section */}
