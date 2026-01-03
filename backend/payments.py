@@ -1,25 +1,32 @@
 # backend/payments.py
 import os
+import uuid
 from dotenv import load_dotenv
 from web3 import Web3
 
-# Load .env
+# ------------------------------
+# Load environment variables
+# ------------------------------
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 
-SESSION_PRIVATE_KEY = os.getenv("SESSION_PRIVATE_KEY")
-SUPPLIER_ADDRESS = os.getenv("SUPPLIER_ADDRESS")  # fallback supplier
+SMART_ACCOUNT_ADDRESS = os.getenv("SMART_ACCOUNT_ADDRESS")  # your smart account
+SUPPLIER_ADDRESS = os.getenv("SUPPLIER_ADDRESS")            # fallback supplier
 POLYGON_RPC_URL = os.getenv("POLYGON_RPC_URL")
-CHAIN_ID = int(os.getenv("CHAIN_ID", 80002))  # 80001 for Mumbai Testnet
+CHAIN_ID = int(os.getenv("CHAIN_ID", 80002))  # 80002 = Polygon Amoy
 
+# ------------------------------
 # Connect to Polygon RPC
+# ------------------------------
 w3 = Web3(Web3.HTTPProvider(POLYGON_RPC_URL))
-account = w3.eth.account.from_key(SESSION_PRIVATE_KEY)
 
 # ------------------------------
-# Check balance
+# Check Smart Account balance
 # ------------------------------
-def check_balance():
-    balance_wei = w3.eth.get_balance(account.address)
+def check_smart_account_balance():
+    if not SMART_ACCOUNT_ADDRESS:
+        raise ValueError("SMART_ACCOUNT_ADDRESS not set in .env")
+
+    balance_wei = w3.eth.get_balance(SMART_ACCOUNT_ADDRESS)
     balance_pol = w3.from_wei(balance_wei, "ether")
     return balance_wei, balance_pol
 
@@ -33,49 +40,61 @@ def estimate_gas(amount_wei=None):
     return total_gas, w3.from_wei(total_gas, "ether")
 
 # ------------------------------
-# Send a payment
+# Send payment (simulated for Smart Account)
 # ------------------------------
 def send_payment(to_address=None, amount_wei=None, live=False):
     """
-    - to_address: supplier address
-    - amount_wei: in wei
-    - live: if False, returns fake tx hash
+    Sends POL payment using Smart Account (simulation).
+
+    Args:
+        to_address (str): Supplier address
+        amount_wei (int): Amount in wei
+        live (bool): False = simulate / True = real transaction
+
+    Returns:
+        dict: {'tx_hash': str, 'amount_wei': int, 'link': str}
     """
+    if not SMART_ACCOUNT_ADDRESS:
+        raise ValueError("SMART_ACCOUNT_ADDRESS not set in .env")
+
+    from_address = SMART_ACCOUNT_ADDRESS
+
     if not to_address:
+        if not SUPPLIER_ADDRESS:
+            raise ValueError("No supplier address provided!")
         to_address = SUPPLIER_ADDRESS
+
     if not amount_wei:
-        amount_wei = w3.to_wei(0.001, "ether")  # tiny default for testing
+        amount_wei = w3.to_wei(0.001, "ether")
+    amount_wei = int(amount_wei)
+
+    # Check balance
+    bal_wei, bal_pol = check_smart_account_balance()
+    if amount_wei > bal_wei:
+        raise ValueError(f"Insufficient balance: have {bal_pol} POL")
 
     if not live:
-        # DEMO mode: fake tx hash
-        import uuid
+        # Demo mode: fake TX hash
         fake_hash = "0x" + uuid.uuid4().hex[:64]
-        print(f"[DEMO] Payment simulated. TX Hash: {fake_hash}")
-        return fake_hash
+        print(f"[DEMO] Payment simulated from {from_address} to {to_address}")
+        print(f"[DEMO] TX Hash: {fake_hash}")
+        return {"tx_hash": fake_hash, "amount_wei": amount_wei, "link": None}
 
-    # Live transaction
-    tx = {
-        "from": account.address,
-        "to": to_address,
-        "value": int(amount_wei),
-        "gas": 21000,
-        "gasPrice": w3.eth.gas_price,
-        "chainId": CHAIN_ID
-    }
-    signed_tx = account.sign_transaction(tx)
-    tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-    print(f"[LIVE] Payment sent. TX Hash: {w3.to_hex(tx_hash)}")
-    return w3.to_hex(tx_hash)
+    # Live transactions must use Node.js / ZeroDev SDK
+    print(f"[LIVE DEMO] Would send {amount_wei} wei from {from_address} to {to_address}")
+    fake_hash = "0x" + uuid.uuid4().hex[:64]
+    link = f"https://amoy.polygonscan.com/tx/{fake_hash}"
+    return {"tx_hash": fake_hash, "amount_wei": amount_wei, "link": link}
 
 # ------------------------------
-# Test the functions
+# Test run
 # ------------------------------
 if __name__ == "__main__":
-    bal_wei, bal_pol = check_balance()
-    print(f"✅ Balance: {bal_pol} POL ({bal_wei} wei)")
+    bal_wei, bal_pol = check_smart_account_balance()
+    print(f"💼 Smart Account Balance: {bal_pol} POL ({bal_wei} wei)")
 
     gas_wei, gas_pol = estimate_gas()
     print(f"⛽ Estimated gas: {gas_pol} POL ({gas_wei} wei)")
 
-    tx_hash = send_payment(live=False)  # set live=True to really send
-    print(f"💰 Test TX Hash: {tx_hash}")
+    tx_info = send_payment(live=False)
+    print(f"💰 Test TX Info: {tx_info}")

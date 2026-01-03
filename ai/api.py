@@ -1,14 +1,12 @@
 # ai/api.py
-
 import sys
 import os
 from typing import Optional
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # -------------------------------
-# In-memory transaction store (demo-safe)
+# In-memory transaction store
 # -------------------------------
 TRANSACTIONS = []
 
@@ -21,17 +19,17 @@ sys.path.append(os.path.join(BASE_DIR, "..", "backend"))
 # -------------------------------
 # Internal imports
 # -------------------------------
+from payments import send_payment, check_smart_account_balance
 from restock_agent import run_agent
 from default_config import DEFAULT_CONFIG
-from payments import send_payment
 
 # -------------------------------
-# FastAPI app setup
+# FastAPI app
 # -------------------------------
 app = FastAPI(title="StockEasy AI Agent")
 
 # -------------------------------
-# Enable CORS (hackathon / demo safe)
+# CORS
 # -------------------------------
 app.add_middleware(
     CORSMiddleware,
@@ -49,71 +47,47 @@ def health():
     return {"status": "StockEasy AI Agent running"}
 
 # -------------------------------
-# Preview restock decisions (NO PAYMENTS)
+# Preview restock decisions (no payments)
 # -------------------------------
 @app.get("/restock-items")
 def restock_items():
-    """
-    Runs AI agent in preview mode.
-    No payments are triggered.
-    """
     return run_agent(DEFAULT_CONFIG)
 
 # -------------------------------
 # Run AI + optional payments
 # -------------------------------
 @app.post("/run-restock")
-def run_restock(
-    config: Optional[dict] = None,
-    execute_payments: bool = False
-):
-    """
-    Run restock AI.
-
-    - config: optional override config
-    - execute_payments: True = send blockchain payments
-    """
-
-    # ✅ SAFE CONFIG MERGE
+def run_restock(config: Optional[dict] = None, execute_payments: bool = False):
     final_config = {**DEFAULT_CONFIG, **(config or {})}
-
     result = run_agent(final_config)
 
-    # -------------------------------
-    # Execute payments only if enabled
-    # -------------------------------
     if execute_payments:
-        for decision in result["decisions"][:1]:
-            intent = decision["payment_intent"]
-
-            tx_hash = send_payment(
-                intent["supplier_address"],
-                intent["amount_wei"]
+        for decision in result["decisions"]:
+            intent = decision.get("payment_intent", {})
+            tx_info = send_payment(
+                to_address=intent.get("supplier_address"),
+                amount_wei=int(intent.get("amount_wei", 0)),
+                live=False  # True only if Node.js ZeroDev integration available
             )
-
-            # Attach tx hash to response
-            decision["tx_hash"] = tx_hash
+            decision["tx_hash"] = tx_info["tx_hash"]
 
             # Store transaction
             TRANSACTIONS.append({
-                "cycle_id": result["cycle_id"],
-                "product": decision["product"],
-                "supplier_id": decision["supplier_id"],
-                "supplier_address": intent["supplier_address"],
-                "amount_wei": intent["amount_wei"],
-                "tx_hash": tx_hash,
+                "cycle_id": result.get("cycle_id"),
+                "product": decision.get("product"),
+                "supplier_id": decision.get("supplier_id"),
+                "supplier_address": intent.get("supplier_address"),
+                "amount_wei": intent.get("amount_wei"),
+                "tx_hash": tx_info["tx_hash"],
             })
 
     return result
 
 # -------------------------------
-# View executed transactions
+# Get all executed transactions
 # -------------------------------
 @app.get("/transactions")
 def get_transactions():
-    """
-    Returns all blockchain transactions executed
-    """
     return {
         "count": len(TRANSACTIONS),
         "transactions": TRANSACTIONS
