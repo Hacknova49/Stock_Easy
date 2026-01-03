@@ -2,14 +2,18 @@ import pandas as pd
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 import uuid
+from pathlib import Path
 
-from ml.predict import predict_7_day_demand
-from default_config import DEFAULT_CONFIG
+from ai.ml.predict import predict_7_day_demand
+from ai.default_config import DEFAULT_CONFIG
+
 
 # ===============================
 # CONSTANTS (NON-BUSINESS)
 # ===============================
-DATA_PATH = "data/processed_dataset/inventory.csv"
+BASE_DIR = Path(__file__).resolve().parent
+DATA_PATH = BASE_DIR / "data" / "processed_dataset" / "inventory.csv"
+
 MAX_ACTIVE_SKUS = 500
 
 # Conversion (demo / chain-ready)
@@ -25,7 +29,9 @@ def inr_to_wei(inr_amount: float) -> str:
     return str(int(pol_amount * POL_DECIMALS))
 
 
-def load_data(path: str) -> pd.DataFrame:
+def load_data(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        raise FileNotFoundError(f"Inventory dataset not found at: {path}")
     return pd.read_csv(path)
 
 
@@ -40,6 +46,10 @@ def compute_monthly_budget(
 
 def assign_priority(df: pd.DataFrame) -> pd.DataFrame:
     max_demand = df["predicted_7d_demand"].max()
+
+    if max_demand == 0:
+        df["priority"] = 1
+        return df
 
     def priority_from_ratio(demand: float) -> int:
         ratio = demand / max_demand
@@ -65,7 +75,10 @@ def restock_decision(row: pd.Series, buffer_days: int) -> dict:
             "decision": "RESTOCK",
             "restock_qty": int(required - current),
             "required_stock": int(required),
-            "reason": f"ML predicted {int(predicted)} units demand for next {buffer_days} days"
+            "reason": (
+                f"ML predicted {int(predicted)} units demand "
+                f"for next {buffer_days} days"
+            )
         }
 
     return {
@@ -77,18 +90,26 @@ def restock_decision(row: pd.Series, buffer_days: int) -> dict:
 
 
 # ===============================
-# MAIN AGENT (MERGED VERSION)
+# MAIN AGENT
 # ===============================
 def run_agent(config: Optional[dict] = None) -> dict:
     """
     Core AI restock engine.
-    Used by FastAPI and local runs.
+    Used by FastAPI, scheduler, and local runs.
     """
 
     config = {**DEFAULT_CONFIG, **(config or {})}
     cycle_id = datetime.now(timezone.utc).isoformat()
 
     df = load_data(DATA_PATH)
+
+    if df.empty:
+        return {
+            "cycle_id": cycle_id,
+            "decisions": [],
+            "message": "Inventory dataset is empty"
+        }
+
     df["predicted_7d_demand"] = predict_7_day_demand(df)
 
     # --- Budget logic ---
@@ -109,7 +130,10 @@ def run_agent(config: Optional[dict] = None) -> dict:
     df = df[df["predicted_7d_demand"] >= MIN_DEMAND_THRESHOLD]
     df = df.sort_values("predicted_7d_demand", ascending=False).head(MAX_ACTIVE_SKUS)
     df = assign_priority(df)
-    df = df.sort_values(by=["priority", "predicted_7d_demand"], ascending=False)
+    df = df.sort_values(
+        by=["priority", "predicted_7d_demand"],
+        ascending=False
+    )
 
     total_spent = 0
     supplier_spend = {s: 0 for s in SUPPLIER_BUDGETS}

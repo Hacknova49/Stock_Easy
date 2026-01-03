@@ -3,10 +3,17 @@ import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.linear_model import Ridge
+from pathlib import Path
 
-from ml.features import build_features
+from ai.ml.features import build_features
 
-DATA_PATH = "data/processed_dataset/inventory.csv"
+
+# -------------------------------
+# PATH FIX (ONLY CHANGE)
+# -------------------------------
+BASE_DIR = Path(__file__).resolve().parent
+DATA_PATH = BASE_DIR.parent / "data" / "processed_dataset" / "inventory.csv"
+
 
 def evaluate_model():
     df = pd.read_csv(DATA_PATH)
@@ -35,6 +42,7 @@ def evaluate_model():
     print(f"RMSE (units): {rmse:.2f}")
     print(f"R² score     : {r2:.3f}")
     print(f"CV MAE (5-fold): {cv_mae:.2f}")
+
 
 if __name__ == "__main__":
     evaluate_model()
