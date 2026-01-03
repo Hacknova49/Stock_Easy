@@ -68,7 +68,8 @@ async function initializeSmartAccount() {
 
 async function runAutonomousOrder() {
     try {
-        const aiResponse = await axios.get('http://127.0.0.1:8000/predict');
+        const aiResponse = await axios.get('http://127.0.0.1:8000/restock-items');
+
         const { risk_level, product_name } = aiResponse.data;
 
         if (risk_level === "high" || inventory.Milk < 3) {
@@ -103,7 +104,7 @@ async function autoPay(shopkeeperId, amount) {
   const userOpHash = await smartAccountClient.sendUserOperation({
     callData: await smartAccountClient.account.encodeCalls([{
       to: session.merchantAddress,
-      value: ethers.parseEther("0.001"), // replace with token later
+      value: ethers.parseEther("0.0001"), // replace with token later
       data: "0x"
     }]),
   });

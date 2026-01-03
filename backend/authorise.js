@@ -22,7 +22,7 @@ async function main() {
 
     // 1. MASTER KEY (MetaMask)
     const masterSigner = privateKeyToAccount(cleanKey("c9927ada38975776f1f51dfe856b6e6581e933609dba6897ba11dbe36391d365"));
-
+                                                       
     // 2. AGENT KEY (Randomly generated)
     const agentPrivateKey = generatePrivateKey(); 
     const sessionKeyAccount = privateKeyToAccount(agentPrivateKey);
