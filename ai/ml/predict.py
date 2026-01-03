@@ -2,7 +2,7 @@ import joblib
 import pandas as pd
 from pathlib import Path
 
-from ai.ml.features import build_features
+from .features import build_features
 
 
 # ===============================

@@ -4,8 +4,9 @@ from typing import Optional
 import uuid
 from pathlib import Path
 
-from ai.ml.predict import predict_7_day_demand
-from ai.default_config import DEFAULT_CONFIG
+from .ml.predict import predict_7_day_demand
+from .default_config import DEFAULT_CONFIG
+
 
 
 # ===============================

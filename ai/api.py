@@ -1,4 +1,5 @@
 # ai/api.py
+
 import sys
 import os
 from typing import Optional
@@ -9,115 +10,109 @@ import requests
 
 from notifier import send_whatsapp_message
 
-# -------------------------------
+# -------------------------------------------------
+# Fix Python path (ADD PROJECT ROOT, NOT backend)
+# -------------------------------------------------
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # Stock_Easy/
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+
+# -------------------------------------------------
+# Internal imports (NOW SAFE)
+# -------------------------------------------------
+from backend.payments import send_payment
+from ai.restock_agent import run_agent
+from ai.default_config import DEFAULT_CONFIG
+
+# -------------------------------------------------
 # In-memory transaction store
-# -------------------------------
+# -------------------------------------------------
 TRANSACTIONS = []
 
-# -------------------------------
-# Add backend folder to Python path
-# -------------------------------
-BASE_DIR = os.path.dirname(__file__)
-sys.path.append(os.path.join(BASE_DIR, "..", "backend"))
+# -------------------------------------------------
+# Conversion rate (POL → INR)
+# -------------------------------------------------
+POL_TO_INR = 150000  # example value
 
-# -------------------------------
-# Internal imports
-# -------------------------------
-from payments import send_payment
-from restock_agent import run_agent
-from default_config import DEFAULT_CONFIG
-
-# -------------------------------
-# Conversion rate (ETH -> INR)
-# Replace with live rate if desired
-# -------------------------------
-ETH_TO_INR = 150000  # example: 1 ETH = ₹1,50,000
-
-# -------------------------------
+# -------------------------------------------------
 # FastAPI app
-# -------------------------------
+# -------------------------------------------------
 app = FastAPI(title="StockEasy AI Agent")
 
-# -------------------------------
-# CORS
-# -------------------------------
+# -------------------------------------------------
+# CORS (lock down in production)
+# -------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # replace in prod
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# -------------------------------
-# Format WhatsApp message
-# -------------------------------
+# -------------------------------------------------
+# WhatsApp summary formatter
+# -------------------------------------------------
 def format_order_summary(restock_result: dict) -> str:
-    """
-    Generates a WhatsApp-friendly order summary with only items and total bill in INR.
-    """
     decisions = restock_result.get("decisions", [])
     total_spent_wei = sum(
         int(d.get("payment_intent", {}).get("amount_wei", 0))
         for d in decisions
     )
 
-    # Convert wei -> ETH -> INR
-    total_eth = total_spent_wei / 1e18
-    total_inr = total_eth * ETH_TO_INR
+    total_pol = total_spent_wei / 1e18
+    total_inr = total_pol * POL_TO_INR
 
-    message_lines = ["✅ StockEasy Order Summary:\n"]
+    lines = ["✅ StockEasy Order Summary\n"]
 
-    for item in decisions:
-        qty = item.get("restock_quantity", 0)
-        if qty > 0:  # only include items that were restocked
-            name = item.get("product")
-            message_lines.append(f"- {name}: {qty} units")
+    for d in decisions:
+        qty = d.get("restock_quantity", 0)
+        if qty > 0:
+            lines.append(f"- {d.get('product')} x{qty}")
 
-    message_lines.append(f"\n💰 Total Bill: ₹{total_inr:,.2f}")
+    lines.append(f"\n💰 Total Bill: ₹{total_inr:,.2f}")
+    return "\n".join(lines)
 
-    return "\n".join(message_lines)
+# -------------------------------------------------
+# Scheduler task
+# -------------------------------------------------
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 
-# -------------------------------
-# Auto-run scheduler
-# -------------------------------
 def auto_run():
     try:
         print("🔁 Auto-running restock + payments")
         resp = requests.post(
-            "http://127.0.0.1:8000/run-restock?execute_payments=true",
+            f"{API_BASE_URL}/run-restock?execute_payments=true",
             timeout=30
         )
-        data = resp.json()
-        print("✅ Auto-run success")
-
+        print("✅ Auto-run success:", resp.status_code)
     except Exception as e:
-        print("❌ Auto-run error:", str(e))
+        print("❌ Auto-run error:", e)
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(auto_run, "interval", minutes=10)
-scheduler.start()
 
-# -------------------------------
+# IMPORTANT: prevent multiple schedulers on reload
+if os.environ.get("RUN_MAIN") == "true":
+    scheduler.add_job(auto_run, "interval", minutes=10)
+    scheduler.start()
+
+# -------------------------------------------------
 # Health check
-# -------------------------------
+# -------------------------------------------------
 @app.get("/")
 def health():
     return {"status": "StockEasy AI Agent running"}
 
-# -------------------------------
-# Preview restock decisions (NO payments)
-# -------------------------------
+# -------------------------------------------------
+# Preview restock (NO payments)
+# -------------------------------------------------
 @app.get("/restock-items")
 def restock_items():
     return run_agent(DEFAULT_CONFIG)
 
-# -------------------------------
+# -------------------------------------------------
 # Run AI + optional payments
-# -------------------------------
-# -------------------------------
-# Run AI + optional payments (smart POL handling)
-# -------------------------------
+# -------------------------------------------------
 @app.post("/run-restock")
 def run_restock(config: Optional[dict] = None, execute_payments: bool = False):
     final_config = {**DEFAULT_CONFIG, **(config or {})}
@@ -126,9 +121,7 @@ def run_restock(config: Optional[dict] = None, execute_payments: bool = False):
     if not execute_payments:
         return result
 
-    # Simulated user balance in wei (1 POL = 1e18 wei)
-    USER_BALANCE_WEI = 1 * 10**18
-
+    USER_BALANCE_WEI = 1 * 10**18  # 1 POL
     total_spent = 0
     successful_txs = 0
     items_ordered = []
@@ -141,36 +134,33 @@ def run_restock(config: Optional[dict] = None, execute_payments: bool = False):
             continue
 
         if amount > USER_BALANCE_WEI - total_spent:
-            # Not enough balance, skip this item
-            print(f"⚠️ Skipping {decision['product']}, insufficient balance")
+            print(f"⚠️ Skipping {decision['product']} (insufficient balance)")
             continue
 
-        # Simulate payment
         tx_info = send_payment(
             to_address=intent.get("supplier_address"),
             amount_wei=amount,
-            live=True # keep False for safety
+            live=os.getenv("LIVE_PAYMENTS") == "true"
         )
 
         decision["tx_hash"] = tx_info["tx_hash"]
         total_spent += amount
         successful_txs += 1
-        items_ordered.append(f"- {decision['product']} x{decision['restock_quantity']}")
+        items_ordered.append(
+            f"- {decision['product']} x{decision['restock_quantity']}"
+        )
 
-        # Store transaction
         TRANSACTIONS.append({
             "cycle_id": result["cycle_id"],
-            "product": decision.get("product"),
-            "supplier_id": decision.get("supplier_id"),
+            "product": decision["product"],
+            "supplier_id": decision["supplier_id"],
             "supplier_address": intent.get("supplier_address"),
             "amount_wei": amount,
             "tx_hash": tx_info["tx_hash"],
         })
 
-    # Convert wei to POL for WhatsApp display
     total_spent_pol = total_spent / 1e18
 
-    # Send WhatsApp receipt
     send_whatsapp_message(
         f"✅ StockEasy Auto-Restock Completed\n\n"
         f"Cycle ID: {result['cycle_id']}\n"
@@ -188,9 +178,9 @@ def run_restock(config: Optional[dict] = None, execute_payments: bool = False):
         "decisions": result["decisions"],
     }
 
-# -------------------------------
-# Transactions history
-# -------------------------------
+# -------------------------------------------------
+# Transaction history
+# -------------------------------------------------
 @app.get("/transactions")
 def get_transactions():
     return {
@@ -198,9 +188,9 @@ def get_transactions():
         "transactions": TRANSACTIONS,
     }
 
-# -------------------------------
-# WhatsApp test endpoint
-# -------------------------------
+# -------------------------------------------------
+# WhatsApp test
+# -------------------------------------------------
 @app.get("/test-whatsapp")
 def test_whatsapp():
     send_whatsapp_message("✅ Test message: StockEasy WhatsApp is working!")
