@@ -1,0 +1,542 @@
+/* Control Panel Styles */
+.control-panel-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #0a0a1a 0%, #12122a 50%, #0a0a1a 100%);
+    color: #ffffff;
+    padding: 2rem 3rem;
+}
+
+/* Header */
+.cp-header {
+    margin-bottom: 2.5rem;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #8080a0;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    transition: color 0.2s ease;
+}
+
+.back-button:hover {
+    color: #a0a0ff;
+}
+
+.cp-title-section {
+    text-align: center;
+}
+
+.cp-title {
+    font-size: 2.25rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0 0 0.5rem 0;
+}
+
+.cp-subtitle {
+    color: #6b6b8a;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Grid Layout */
+.cp-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Cards */
+.cp-card {
+    background: linear-gradient(135deg, rgba(25, 25, 50, 0.9) 0%, rgba(18, 18, 42, 0.95) 100%);
+    border: 1px solid rgba(80, 80, 140, 0.25);
+    border-radius: 16px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.cp-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.cp-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0 0 1.5rem 0;
+}
+
+.card-icon {
+    opacity: 0.9;
+}
+
+.card-icon.gold {
+    color: #fbbf24;
+}
+
+.card-icon.yellow {
+    color: #facc15;
+}
+
+.card-icon.blue {
+    color: #60a5fa;
+}
+
+.card-icon.orange {
+    color: #fb923c;
+}
+
+/* Form Groups */
+.cp-form-group {
+    margin-bottom: 1rem;
+}
+
+.cp-form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: #9090b0;
+    margin-bottom: 0.5rem;
+}
+
+/* Dropdown */
+.cp-dropdown-wrapper {
+    position: relative;
+}
+
+.cp-dropdown-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(30, 30, 60, 0.6);
+    border: 1px solid rgba(80, 80, 140, 0.3);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: #ffffff;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cp-dropdown-trigger:hover {
+    border-color: rgba(100, 100, 180, 0.5);
+    background: rgba(35, 35, 70, 0.7);
+}
+
+.cp-dropdown-trigger .currency {
+    color: #8080a0;
+    margin-right: 0.25rem;
+}
+
+.cp-dropdown-trigger .value {
+    flex: 1;
+    text-align: left;
+}
+
+.cp-dropdown-trigger .chevron {
+    color: #6b6b8a;
+    transition: transform 0.2s ease;
+}
+
+.cp-dropdown-trigger .chevron.open {
+    transform: rotate(180deg);
+}
+
+.cp-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: rgba(25, 25, 55, 0.98);
+    border: 1px solid rgba(80, 80, 140, 0.4);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 100;
+    animation: dropdownFade 0.15s ease;
+}
+
+@keyframes dropdownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cp-dropdown-item {
+    padding: 0.65rem 1rem;
+    color: #c0c0e0;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.cp-dropdown-item:hover {
+    background: rgba(100, 80, 200, 0.2);
+    color: #ffffff;
+}
+
+/* Progress Section */
+.cp-progress-section {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(80, 80, 140, 0.2);
+}
+
+.cp-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #8080a0;
+    margin-bottom: 0.5rem;
+}
+
+.cp-progress-bar {
+    height: 8px;
+    background: rgba(60, 60, 100, 0.5);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.cp-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Form Rows */
+.cp-form-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.cp-form-row label {
+    font-size: 0.9rem;
+    color: #9090b0;
+}
+
+/* Number Input */
+.cp-number-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cp-number-input input {
+    width: 60px;
+    background: rgba(30, 30, 60, 0.6);
+    border: 1px solid rgba(80, 80, 140, 0.3);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    color: #ffffff;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: border-color 0.2s ease;
+}
+
+.cp-number-input input:focus {
+    outline: none;
+    border-color: rgba(139, 92, 246, 0.6);
+}
+
+.cp-number-input input::-webkit-inner-spin-button,
+.cp-number-input input::-webkit-outer-spin-button {
+    opacity: 1;
+}
+
+.cp-number-input .unit {
+    font-size: 0.85rem;
+    color: #6b6b8a;
+}
+
+/* Toggle Group */
+.cp-toggle-group {
+    display: flex;
+    background: rgba(30, 30, 60, 0.4);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(80, 80, 140, 0.25);
+}
+
+.cp-toggle-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    color: #8080a0;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cp-toggle-btn:hover {
+    color: #c0c0e0;
+}
+
+.cp-toggle-btn.active {
+    background: rgba(80, 80, 140, 0.4);
+    color: #ffffff;
+}
+
+/* Supplier List */
+.cp-supplier-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.cp-supplier-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+
+.supplier-id {
+    font-size: 0.9rem;
+    color: #c0c0e0;
+    min-width: 45px;
+}
+
+.supplier-address {
+    font-size: 0.85rem;
+    color: #6b6b8a;
+    font-family: monospace;
+    flex: 1;
+}
+
+.supplier-status {
+    padding: 0.3rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.supplier-status.allowed {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.supplier-status.allowed:hover {
+    background: rgba(34, 197, 94, 0.25);
+}
+
+.supplier-status.revoked {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.supplier-status.revoked:hover {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+/* Allocation Section */
+.cp-allocation-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(80, 80, 140, 0.2);
+}
+
+.cp-allocation-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: #9090b0;
+}
+
+.allocation-value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #c0c0e0;
+}
+
+.allocation-bar {
+    display: inline-block;
+    width: 80px;
+    height: 6px;
+    background: rgba(60, 60, 100, 0.5);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.allocation-bar span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+    border-radius: 3px;
+}
+
+/* Checkbox */
+.cp-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #c0c0e0;
+}
+
+.cp-checkbox input {
+    display: none;
+}
+
+.cp-checkbox .checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(100, 100, 180, 0.4);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.cp-checkbox input:checked+.checkmark {
+    background: #8b5cf6;
+    border-color: #8b5cf6;
+}
+
+.cp-checkbox input:checked+.checkmark::after {
+    content: "✓";
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.checkbox-row {
+    margin-bottom: 1.25rem;
+}
+
+/* Danger Button */
+.cp-danger-btn {
+    width: 100%;
+    padding: 0.85rem 1.5rem;
+    background: linear-gradient(135deg, rgba(185, 28, 28, 0.8) 0%, rgba(127, 29, 29, 0.9) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    color: #fca5a5;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+}
+
+.cp-danger-btn:hover {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.9) 0%, rgba(153, 27, 27, 0.95) 100%);
+    color: #fecaca;
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* Alerts Row */
+.cp-alerts-row {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+}
+
+.cp-alert-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #c0c0e0;
+}
+
+.alert-icon.warning {
+    color: #fbbf24;
+    font-size: 1.1rem;
+}
+
+/* Small dropdown variant */
+.cp-dropdown-wrapper.small .cp-dropdown-trigger {
+    padding: 0.5rem 0.75rem;
+}
+
+/* Save Section */
+.cp-save-section {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(80, 80, 140, 0.15);
+}
+
+.cp-save-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.9rem 2.5rem;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.8) 0%, rgba(22, 163, 74, 0.9) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2);
+}
+
+.cp-save-btn:hover {
+    background: linear-gradient(135deg, rgba(74, 222, 128, 0.9) 0%, rgba(34, 197, 94, 0.95) 100%);
+    border-color: rgba(74, 222, 128, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+}
+
+.cp-save-btn:active {
+    transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .cp-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .control-panel-page {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .cp-title {
+        font-size: 1.75rem;
+    }
+
+    .cp-form-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .cp-alerts-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}

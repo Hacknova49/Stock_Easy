@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
+import ControlPanel from './pages/control-panel/ControlPanel';
 import AppNavbar from './components/AppNavbar';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/homepage" element={<Home />} />
+        <Route path="/control-panel" element={<ControlPanel />} />
       </Routes>
     </BrowserRouter>
   );
