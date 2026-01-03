@@ -91,10 +91,17 @@ def auto_run():
 
 scheduler = BackgroundScheduler()
 
-# IMPORTANT: prevent multiple schedulers on reload
-if os.environ.get("RUN_MAIN") == "true":
-    scheduler.add_job(auto_run, "interval", minutes=10)
+@app.on_event("startup")
+def start_scheduler():
+    scheduler.add_job(auto_run, "interval", minutes=100)
     scheduler.start()
+    print("🟢 Scheduler started")
+
+@app.on_event("shutdown")
+def shutdown_scheduler():
+    print("🔴 Scheduler shutting down")
+    scheduler.shutdown()
+
 
 # -------------------------------------------------
 # Health check
