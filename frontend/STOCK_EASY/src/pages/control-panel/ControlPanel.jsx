@@ -12,7 +12,7 @@ import {
     Check
 } from "lucide-react";
 import "./controlPanel.css";
-
+//const API_BASE_URL = "http://localhost:8000"; use this if not ddeployed
 const API_BASE_URL = "https://stockeasy-backend-qi9b.onrender.com";
 
 // Default configuration (matching ai/default_config.py structure)

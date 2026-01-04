@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import AppNavbar from "../components/AppNavbar";
 import "./Dashboard.css";
+//comment this if not deployed
 const API_BASE_URL = "https://stockeasy-backend-qi9b.onrender.com";
 
 // Chart colors
@@ -46,6 +47,9 @@ function Dashboard() {
           },
           body: JSON.stringify({ execute_payments: false })
         });
+// const res = await fetch("http://localhost:8000/run-restock", {
+//   method: "POST",
+// });
 
       if (!res.ok) throw new Error("Failed to fetch agent data");
       const json = await res.json();
