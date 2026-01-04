@@ -41,6 +41,23 @@ const defaultConfig = {
 function ControlPanel() {
     const [config, setConfig] = useState(defaultConfig);
     const [editingSupplier, setEditingSupplier] = useState(null);
+    useEffect(() => {
+        async function loadConfig() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/agent/config`);
+                const data = await res.json();
+
+                // Backend returns { has_config, config }
+                if (data?.config) {
+                    setConfig(data.config);
+                }
+            } catch (e) {
+                console.warn("No saved config found");
+            }
+        }
+
+        loadConfig();
+    }, []);
 
     const handleNumberInput = (field, value) => {
         const numValue = parseInt(value) || 0;
