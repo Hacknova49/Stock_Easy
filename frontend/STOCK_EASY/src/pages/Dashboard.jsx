@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import AppNavbar from "../components/AppNavbar";
 import "./Dashboard.css";
+const API_BASE_URL = "https://stockeasy-backend-qi9b.onrender.com";
 
 // Chart colors
 const COLORS = {
@@ -38,9 +39,14 @@ function Dashboard() {
 
   const fetchAgentData = async () => {
     try {
-      const res = await fetch("http://localhost:8000/run-restock", {
-        method: "POST",
-      });
+        const res = await fetch(`${API_BASE_URL}/run-restock`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ execute_payments: false })
+        });
+
       if (!res.ok) throw new Error("Failed to fetch agent data");
       const json = await res.json();
       setData(json);
@@ -51,7 +57,7 @@ function Dashboard() {
 
   useEffect(() => {
     fetchAgentData();
-    const interval = setInterval(fetchAgentData, 5000);
+    const interval = setInterval(fetchAgentData, 30000);
     return () => clearInterval(interval);
   }, []);
 
