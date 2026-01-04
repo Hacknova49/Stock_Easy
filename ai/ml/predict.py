@@ -30,3 +30,4 @@ def predict_7_day_demand(df: pd.DataFrame):
     predictions = model.predict(X)
 
     return predictions
+
