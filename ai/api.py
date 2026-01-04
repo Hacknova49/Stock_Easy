@@ -25,6 +25,7 @@ from backend.payments import send_payment
 from ai.restock_agent import run_agent
 from ai.default_config import DEFAULT_CONFIG
 from backend.config_mapper import frontend_to_agent_config
+from backend.config_store import save_config, load_config   # 🔥 MONGO
 
 # -------------------------------------------------
 # GLOBAL STATE (SINGLE PROCESS)
@@ -59,14 +60,31 @@ app.add_middleware(
 )
 
 # =================================================
+# LOAD CONFIG FROM MONGODB ON STARTUP  🔥
+# =================================================
+@app.on_event("startup")
+def load_persisted_config():
+    global CURRENT_CONFIG
+    saved = load_config()
+    if saved:
+        CURRENT_CONFIG = saved
+        print("🧠 Loaded agent config from MongoDB")
+    else:
+        print("ℹ️ No saved config found in MongoDB")
+
+# =================================================
 # CONFIG ENDPOINTS
 # =================================================
 
 @app.post("/api/agent/config")
 def save_agent_config(config: dict):
+    """
+    Save config in memory + persist to MongoDB
+    """
     global CURRENT_CONFIG
     CURRENT_CONFIG = config
-    return {"status": "ok", "message": "User config saved successfully"}
+    save_config(config)   # 🔥 persist
+    return {"status": "ok", "message": "Config saved & persisted"}
 
 @app.get("/api/agent/config")
 def get_agent_config():
@@ -82,14 +100,13 @@ def get_final_agent_config() -> dict:
     return DEFAULT_CONFIG
 
 # =================================================
-# DASHBOARD STATS (🔥 FIXES 404)
+# DASHBOARD STATS
 # =================================================
 
 @app.get("/api/dashboard/stats")
 def get_dashboard_stats():
     inventory_df = pd.read_csv(INVENTORY_CSV)
 
-    # --- Stock health ---
     healthy = int((inventory_df["current_stock"] > 20).sum())
     low = int(
         ((inventory_df["current_stock"] <= 20) &
@@ -97,7 +114,6 @@ def get_dashboard_stats():
     )
     critical = int((inventory_df["current_stock"] <= 5).sum())
 
-    # --- Budget usage ---
     total_spent_wei = sum(tx["amount_wei"] for tx in TRANSACTIONS)
     total_spent_pol = total_spent_wei / 1e18
     total_spent_inr = int(total_spent_pol * POL_TO_INR)
@@ -108,14 +124,12 @@ def get_dashboard_stats():
     else:
         monthly_budget = DEFAULT_CONFIG["monthly_budget"]
 
-    budget_remaining = max(monthly_budget - total_spent_inr, 0)
-
     return {
         "aiStatus": {
             "isActive": CURRENT_CONFIG is not None,
             "monthlyBudget": monthly_budget,
             "budgetUsed": total_spent_inr,
-            "budgetRemaining": budget_remaining,
+            "budgetRemaining": max(monthly_budget - total_spent_inr, 0),
         },
         "stockHealth": {
             "healthy": healthy,
@@ -216,7 +230,6 @@ def run_restock(execute_payments: bool = False):
             "timestamp": datetime.utcnow().isoformat()
         })
 
-        # Inventory update (PERSISTENT)
         inventory_df.loc[
             inventory_df["product"] == product,
             "current_stock"
