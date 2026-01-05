@@ -63,6 +63,7 @@
 
 .cp-card.full-width {
     grid-column: 1 / -1;
+    margin-top: 1rem;
 }
 
 .cp-card-title {
@@ -104,6 +105,224 @@
 
 .card-icon.green {
     color: #4ade80;
+}
+
+.card-icon.purple {
+    color: #a78bfa;
+}
+
+/* Slider Styles */
+.cp-slider-section {
+    margin-bottom: 1.5rem;
+}
+
+.cp-slider-section:last-child {
+    margin-bottom: 0;
+}
+
+.cp-slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.cp-slider-header label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e0e0f0;
+}
+
+.cp-slider-header .slider-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.cp-slider-desc {
+    font-size: 0.85rem;
+    color: #7080a0;
+    margin: 0 0 1rem 0;
+}
+
+.cp-slider-wrapper {
+    margin-bottom: 0.75rem;
+}
+
+.cp-slider {
+    width: 100%;
+    height: 10px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(60, 60, 100, 0.5);
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cp-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    transition: all 0.2s ease;
+}
+
+.cp-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+}
+
+.cp-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #606080;
+    margin-top: 0.5rem;
+    padding: 0 0.25rem;
+}
+
+.slider-amount-display {
+    font-size: 0.9rem;
+    color: #9090b0;
+    padding: 0.75rem 1rem;
+    background: rgba(40, 40, 80, 0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(80, 80, 140, 0.2);
+}
+
+.slider-amount-display strong {
+    color: #4ade80;
+    font-weight: 700;
+}
+
+.cp-slider-divider {
+    height: 1px;
+    background: rgba(80, 80, 140, 0.2);
+    margin: 1.5rem 0;
+}
+
+/* Priority Split Sliders */
+.header-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mini-icon {
+    color: #a78bfa;
+}
+
+.slider-total {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.slider-total.valid {
+    color: #4ade80;
+}
+
+.slider-total.invalid {
+    color: #f87171;
+}
+
+.priority-sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.priority-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.priority-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 130px;
+    font-size: 0.9rem;
+    color: #c0c0e0;
+}
+
+.priority-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.priority-label.high .priority-dot {
+    background: #f87171;
+}
+
+.priority-label.medium .priority-dot {
+    background: #fbbf24;
+}
+
+.priority-label.low .priority-dot {
+    background: #4ade80;
+}
+
+.priority-slider-row .cp-slider {
+    flex: 1;
+}
+
+.cp-slider.priority-high::-webkit-slider-thumb {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.cp-slider.priority-medium::-webkit-slider-thumb {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+}
+
+.cp-slider.priority-low::-webkit-slider-thumb {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+}
+
+.cp-slider.priority-high::-moz-range-thumb {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.cp-slider.priority-medium::-moz-range-thumb {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+}
+
+.cp-slider.priority-low::-moz-range-thumb {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+}
+
+.priority-value {
+    min-width: 45px;
+    text-align: right;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #e0e0f0;
 }
 
 /* Budget Split Styles */

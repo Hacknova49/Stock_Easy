@@ -40,16 +40,16 @@ function Dashboard() {
 
   const fetchAgentData = async () => {
     try {
-        const res = await fetch(`${API_BASE_URL}/run-restock`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ execute_payments: false })
-        });
-// const res = await fetch("http://localhost:8000/run-restock", {
-//   method: "POST",
-// });
+      const res = await fetch(`${API_BASE_URL}/run-restock`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ execute_payments: false })
+      });
+      // const res = await fetch("http://localhost:8000/run-restock", {
+      //   method: "POST",
+      // });
 
       if (!res.ok) throw new Error("Failed to fetch agent data");
       const json = await res.json();

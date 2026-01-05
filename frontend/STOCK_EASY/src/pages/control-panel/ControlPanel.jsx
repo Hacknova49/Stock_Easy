@@ -9,7 +9,9 @@ import {
     Bell,
     Save,
     Pencil,
-    Check
+    Check,
+    Sliders,
+    PieChart
 } from "lucide-react";
 import "./controlPanel.css";
 //const API_BASE_URL = "http://localhost:8000"; use this if not ddeployed
@@ -23,6 +25,16 @@ const defaultConfig = {
 
     bufferStock: 7,
     minDemand: 5, // matches min_demand_threshold in default_config.py
+
+    // Restock run budget limit (% of monthly budget)
+    restockBudgetLimit: 25,
+
+    // Priority budget split (% allocation)
+    prioritySplit: {
+        high: 50,
+        medium: 30,
+        low: 20,
+    },
 
     suppliers: [
         { id: "SUP1", address: "0x4C2c3EcB63647E34Bd473A1DEc2708D365806Ed2", status: "Allowed", allocation: 100 },
@@ -106,6 +118,19 @@ function ControlPanel() {
         setConfig({
             ...config,
             supplierBudgetSplit: { ...config.supplierBudgetSplit, [supplierId]: numValue }
+        });
+    };
+
+    const handleRestockLimitChange = (value) => {
+        const numValue = parseInt(value) || 0;
+        setConfig({ ...config, restockBudgetLimit: Math.min(100, Math.max(0, numValue)) });
+    };
+
+    const handlePrioritySplitChange = (priority, value) => {
+        const numValue = parseInt(value) || 0;
+        setConfig({
+            ...config,
+            prioritySplit: { ...config.prioritySplit, [priority]: numValue }
         });
     };
     const saveConfigToBackend = async () => {
@@ -297,6 +322,114 @@ function ControlPanel() {
                         <span className={Object.values(config.supplierBudgetSplit).reduce((a, b) => a + b, 0) === 100 ? 'valid' : 'invalid'}>
                             {Object.values(config.supplierBudgetSplit).reduce((a, b) => a + b, 0)}%
                         </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Budget Allocation Sliders */}
+            <div className="cp-card full-width">
+                <h2 className="cp-card-title">
+                    <Sliders size={20} className="card-icon purple" />
+                    Budget Allocation Controls
+                </h2>
+
+                {/* Restock Budget Limit Slider */}
+                <div className="cp-slider-section">
+                    <div className="cp-slider-header">
+                        <label>Restock Run Budget Limit</label>
+                        <span className="slider-value">{config.restockBudgetLimit}%</span>
+                    </div>
+                    <p className="cp-slider-desc">
+                        How much of the monthly budget can be spent in one restock run?
+                    </p>
+                    <div className="cp-slider-wrapper">
+                        <input
+                            type="range"
+                            min="5"
+                            max="100"
+                            value={config.restockBudgetLimit}
+                            onChange={(e) => handleRestockLimitChange(e.target.value)}
+                            className="cp-slider"
+                        />
+                        <div className="slider-labels">
+                            <span>5%</span>
+                            <span>50%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    <div className="slider-amount-display">
+                        Max per run: <strong>₹{((config.monthlyBudget * config.restockBudgetLimit) / 100).toLocaleString()}</strong>
+                    </div>
+                </div>
+
+                <div className="cp-slider-divider"></div>
+
+                {/* Priority Budget Split */}
+                <div className="cp-slider-section">
+                    <div className="cp-slider-header">
+                        <div className="header-with-icon">
+                            <PieChart size={18} className="mini-icon" />
+                            <label>Priority Budget Split</label>
+                        </div>
+                        <span className={`slider-total ${Object.values(config.prioritySplit).reduce((a, b) => a + b, 0) === 100 ? 'valid' : 'invalid'}`}>
+                            Total: {Object.values(config.prioritySplit).reduce((a, b) => a + b, 0)}%
+                        </span>
+                    </div>
+                    <p className="cp-slider-desc">
+                        How should the cycle budget be split across priorities?
+                    </p>
+
+                    <div className="priority-sliders">
+                        {/* High Priority */}
+                        <div className="priority-slider-row">
+                            <div className="priority-label high">
+                                <span className="priority-dot"></span>
+                                High Priority
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={config.prioritySplit.high}
+                                onChange={(e) => handlePrioritySplitChange('high', e.target.value)}
+                                className="cp-slider priority-high"
+                            />
+                            <span className="priority-value">{config.prioritySplit.high}%</span>
+                        </div>
+
+                        {/* Medium Priority */}
+                        <div className="priority-slider-row">
+                            <div className="priority-label medium">
+                                <span className="priority-dot"></span>
+                                Medium Priority
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={config.prioritySplit.medium}
+                                onChange={(e) => handlePrioritySplitChange('medium', e.target.value)}
+                                className="cp-slider priority-medium"
+                            />
+                            <span className="priority-value">{config.prioritySplit.medium}%</span>
+                        </div>
+
+                        {/* Low Priority */}
+                        <div className="priority-slider-row">
+                            <div className="priority-label low">
+                                <span className="priority-dot"></span>
+                                Low Priority
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={config.prioritySplit.low}
+                                onChange={(e) => handlePrioritySplitChange('low', e.target.value)}
+                                className="cp-slider priority-low"
+                            />
+                            <span className="priority-value">{config.prioritySplit.low}%</span>
+                        </div>
                     </div>
                 </div>
             </div>
