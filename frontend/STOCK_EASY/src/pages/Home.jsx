@@ -126,11 +126,10 @@ function Home() {
                             </div>
                             <div className="status-content">
                                 <div
-                                    className={`status-indicator ${
-                                        stats?.aiStatus?.isActive
-                                            ? "active"
-                                            : "inactive"
-                                    }`}
+                                    className={`status-indicator ${stats?.aiStatus?.isActive
+                                        ? "active"
+                                        : "inactive"
+                                        }`}
                                 >
                                     {stats?.aiStatus?.isActive ? (
                                         <CheckCircle size={16} />
@@ -152,7 +151,7 @@ function Home() {
                                         <span className="value">
                                             {formatCurrency(
                                                 stats?.aiStatus?.monthlyBudget ||
-                                                    0
+                                                0
                                             )}
                                         </span>
                                     </div>

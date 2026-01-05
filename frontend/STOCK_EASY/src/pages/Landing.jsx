@@ -131,12 +131,6 @@ function Landing() {
         </section>
 
       </div>
-
-      {/* FLOATING DASHBOARD BUTTON */}
-      <Link to="/dashboard" className="floating-dashboard-btn">
-        <LayoutDashboard size={24} />
-        <span className="dashboard-tooltip">View Dashboard</span>
-      </Link>
     </div>
   );
 }
