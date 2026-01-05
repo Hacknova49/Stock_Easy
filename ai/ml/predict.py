@@ -1,33 +1,81 @@
-import joblib
+import numpy as np
 import pandas as pd
-from pathlib import Path
+from datetime import datetime
 
-from .features import build_features
-
-
-# ===============================
-# MODEL PATH (PACKAGE-SAFE)
-# ===============================
-BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR / "models" / "demand_model.joblib"
-
-
-def predict_7_day_demand(df: pd.DataFrame):
+def predict_7_day_demand(df: pd.DataFrame) -> np.ndarray:
     """
-    Takes inventory dataframe
-    Returns predicted 7-day demand per product
+    Simulates real-world demand prediction with:
+    - seasonality
+    - price elasticity
+    - stock pressure
+    - momentum
+    - controlled randomness
     """
 
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(
-            f"Demand model not found at: {MODEL_PATH}"
-        )
+    df = df.copy()
 
-    model = joblib.load(MODEL_PATH)
+    # -----------------------------
+    # Base demand
+    # -----------------------------
+    base_demand = df["avg_daily_sales"] * 7
 
-    X, _, _ = build_features(df)
+    # -----------------------------
+    # Seasonality (weekday / weekend)
+    # -----------------------------
+    today = datetime.utcnow().weekday()  # 0=Mon, 6=Sun
 
-    predictions = model.predict(X)
+    if today >= 5:  # Weekend boost
+        seasonality = 1.15
+    else:
+        seasonality = 1.0
 
-    return predictions
+    # -----------------------------
+    # Price elasticity
+    # -----------------------------
+    category_price_mean = df.groupby("category")["sale_price"].transform("mean")
+    price_ratio = df["sale_price"] / category_price_mean
 
+    # Higher price → lower demand
+    price_effect = np.clip(1.2 - (price_ratio - 1.0), 0.6, 1.3)
+
+    # -----------------------------
+    # Stock pressure (lost sales simulation)
+    # -----------------------------
+    stock_coverage_days = df["current_stock"] / df["avg_daily_sales"]
+    stock_pressure = np.where(
+        stock_coverage_days < 3,     # low stock
+        0.85,
+        1.0
+    )
+
+    # -----------------------------
+    # Momentum (hot-selling items)
+    # -----------------------------
+    momentum = np.clip(
+        1.0 + np.log1p(df["avg_daily_sales"]) * 0.05,
+        1.0,
+        1.3
+    )
+
+    # -----------------------------
+    # Controlled randomness (real-world noise)
+    # -----------------------------
+    noise = np.random.normal(
+        loc=1.0,
+        scale=0.10,
+        size=len(df)
+    )
+
+    # -----------------------------
+    # Final demand
+    # -----------------------------
+    predicted = (
+        base_demand
+        * seasonality
+        * price_effect
+        * stock_pressure
+        * momentum
+        * noise
+    )
+
+    return predicted.clip(lower=1).round().astype(int)
