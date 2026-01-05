@@ -66,7 +66,9 @@ function Home() {
             <header className="home-header">
                 <div className="header-content">
                     <div className="brand-section">
-                        <h1 className="brand-title">Stock Easy</h1>
+                        <Link to="/" className="brand-link">
+                            <h1 className="brand-title">Stock Easy</h1>
+                        </Link>
                     </div>
 
                     <nav className="main-nav">

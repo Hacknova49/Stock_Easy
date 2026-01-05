@@ -4,6 +4,8 @@
     background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a1a 100%);
     color: #ffffff;
     padding: 2rem;
+    position:sticky;
+    z-index: 1;
 }
 
 .dashboard-header {

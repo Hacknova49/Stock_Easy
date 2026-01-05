@@ -4,8 +4,7 @@ import GooeyNav from "./GooeyNav";
 
 const navItems = [
   { label: "Home", path: "/homepage" },
-  { label: "Dashboard", path: "/dashboard" },
-  { label: "About", path: "/about" }
+  { label: "Dashboard", path: "/dashboard" }
 ];
 
 function AppNavbar() {

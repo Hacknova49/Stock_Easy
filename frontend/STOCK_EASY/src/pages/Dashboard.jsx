@@ -406,19 +406,6 @@ function Dashboard() {
 
                   <p className="decision-reason">{d.reason}</p>
 
-                  <div className="decision-payment">
-                    <div className="payment-header">💳 Payment Intent (Restricted)</div>
-                    <div className="payment-details">
-                      <span>Amount: ₹{d.total_cost.toLocaleString()} {d.payment_intent.currency}</span>
-                      <span>Purpose: {d.payment_intent.purpose}</span>
-                    </div>
-                    <div className="payment-constraints">
-                      <span>✔ Max Amount Enforced</span>
-                      <span>✔ Allowed Merchant Only</span>
-                      <span>✔ Session Key Used</span>
-                    </div>
-                    <div className="payment-status">Status: EXECUTED ✓</div>
-                  </div>
                 </div>
               );
             })}

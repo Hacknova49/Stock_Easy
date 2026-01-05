@@ -41,6 +41,15 @@
   background-clip: text;
 }
 
+.brand-link {
+  text-decoration: none;
+  transition: opacity 0.3s ease;
+}
+
+.brand-link:hover {
+  opacity: 0.8;
+}
+
 .main-nav {
   display: flex;
   gap: 0.5rem;
