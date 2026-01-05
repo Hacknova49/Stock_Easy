@@ -61,7 +61,21 @@ function ControlPanel() {
 
                 // Backend returns { has_config, config }
                 if (data?.config) {
-                    setConfig(data.config);
+                    // Deep merge with defaults to ensure all required properties exist
+                    setConfig({
+                        ...defaultConfig,
+                        ...data.config,
+                        // Ensure nested objects are properly merged with defaults
+                        prioritySplit: {
+                            ...defaultConfig.prioritySplit,
+                            ...(data.config.prioritySplit || {})
+                        },
+                        supplierBudgetSplit: {
+                            ...defaultConfig.supplierBudgetSplit,
+                            ...(data.config.supplierBudgetSplit || {})
+                        },
+                        suppliers: data.config.suppliers || defaultConfig.suppliers
+                    });
                 }
             } catch (e) {
                 console.warn("No saved config found");
