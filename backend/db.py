@@ -10,3 +10,4 @@ client = MongoClient(MONGO_URI)
 
 db = client["stockeasy"]
 config_collection = db["agent_config"]
+

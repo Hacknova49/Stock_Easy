@@ -32,10 +32,36 @@ def frontend_to_agent_config(frontend_cfg: dict) -> dict:
         for supplier_id, percent in supplier_budget_split_ui.items()
     }
 
+    # -------------------------------------------------
+    # ✅ NEW: Restock Budget Limit (per run, %)
+    # -------------------------------------------------
+    restock_budget_limit_pct = int(
+        frontend_cfg.get(
+            "restockBudgetLimit",
+            DEFAULT_CONFIG.get("restock_budget_limit_pct", 100)
+        )
+    )
+
+    # -------------------------------------------------
+    # ✅ NEW: Priority Budget Split
+    # -------------------------------------------------
+    priority_split = frontend_cfg.get(
+        "prioritySplit",
+        DEFAULT_CONFIG.get(
+            "priority_split",
+            {"high": 50, "medium": 30, "low": 20}
+        )
+    )
+
     return {
         "monthly_budget": int(monthly_budget),
         "buffer_days": int(buffer_days),
         "min_demand_threshold": int(min_demand_threshold),
+
+        # 🔥 PASSED TO AI AGENT
+        "restock_budget_limit_pct": restock_budget_limit_pct,
+        "priority_split": priority_split,
+
         "supplier_address_map": supplier_address_map,
         "supplier_budget_split": supplier_budget_split,
     }
