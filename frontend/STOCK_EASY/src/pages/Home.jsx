@@ -22,7 +22,7 @@ import "./Home.css";
  * - Deployed: your backend URL (via env)
  */
 const API_BASE =
-    import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+    import.meta.env.VITE_API_BASE || "https://stockeasy-backend-qi9b.onrender.com";
 
 function Home() {
     const [stats, setStats] = useState(null);
@@ -77,10 +77,6 @@ function Home() {
                         <Link to="/dashboard" className="nav-item">
                             <LayoutDashboard size={18} />
                             <span>Dashboard</span>
-                        </Link>
-                        <Link to="/feedback" className="nav-item">
-                            <MessageSquare size={18} />
-                            <span>Feedback</span>
                         </Link>
                     </nav>
                 </div>
@@ -226,46 +222,6 @@ function Home() {
                         </div>
                     </div>
                 )}
-            </section>
-
-            {/* Recent Actions (UI-only demo section kept as-is) */}
-            <section className="actions-section">
-                <div className="section-header">
-                    <h2 className="section-title">
-                        <Clock size={22} />
-                        Recent AI Actions
-                    </h2>
-                </div>
-
-                <div className="actions-grid">
-                    <div className="action-card executed">
-                        <div className="action-card-header">
-                            <ShoppingCart size={18} />
-                            <h4>Items Bought</h4>
-                            <span className="action-badge success">
-                                Executed
-                            </span>
-                        </div>
-                        <div className="action-status success">
-                            <CheckCircle size={14} />
-                            Status: Executed
-                        </div>
-                    </div>
-
-                    <div className="action-card blocked">
-                        <div className="action-card-header">
-                            <AlertTriangle size={18} />
-                            <h4>Blocked Items</h4>
-                            <span className="action-badge danger">
-                                Blocked
-                            </span>
-                        </div>
-                        <div className="action-status danger">
-                            <XCircle size={14} />
-                            Blocked by policy
-                        </div>
-                    </div>
-                </div>
             </section>
         </div>
     );
