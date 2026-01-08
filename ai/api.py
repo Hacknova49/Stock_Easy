@@ -8,8 +8,11 @@ import requests
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
+from .security import TransactionRequest, UserSecurityProfile
+from .transactions import simulate_transaction
+from .audit import log_event
 
-from ai.notifier import send_whatsapp_message
+from .notifier import send_whatsapp_message
 
 # -------------------------------------------------
 # Fix Python path (ADD PROJECT ROOT)
@@ -156,7 +159,7 @@ scheduler = BackgroundScheduler()
 
 @app.on_event("startup")
 def start_scheduler():
-    scheduler.add_job(auto_run, "interval", minutes=1000)
+    scheduler.add_job(auto_run, "interval", minutes=1)
     scheduler.start()
     print("🟢 Scheduler started")
 
@@ -269,3 +272,23 @@ def test_whatsapp():
         return {"status": "WhatsApp test message sent"}
     except Exception as e:
         return {"status": "failed", "error": str(e)}
+    
+@app.post("/api/transaction/simulate")
+def simulate(tx: TransactionRequest):
+    user = UserSecurityProfile(
+        approved_addresses=[
+            "0xSAFE_SUPPLIER_1",
+            "0xSAFE_SUPPLIER_2"
+        ],
+        monthly_budget=50000,
+        used_budget=42000
+    )
+
+    result = simulate_transaction(tx, user)
+    log_event("TRANSACTION_ATTEMPT", result)
+
+    if result["status"] == "BLOCKED":
+        return result
+
+    return result
+
