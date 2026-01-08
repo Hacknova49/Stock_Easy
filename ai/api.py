@@ -159,7 +159,7 @@ scheduler = BackgroundScheduler()
 
 @app.on_event("startup")
 def start_scheduler():
-    scheduler.add_job(auto_run, "interval", minutes=1)
+    scheduler.add_job(auto_run, "interval", minutes=10000)
     scheduler.start()
     print("🟢 Scheduler started")
 
