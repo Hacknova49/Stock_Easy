@@ -45,7 +45,7 @@ CURRENT_CONFIG: Optional[dict] = None
 TRANSACTIONS = []
 
 # -------------------------------------------------
-# OWNER INVENTORY (CSV ONLY)
+# OWNER INVENTORY (CSV)
 # -------------------------------------------------
 OWNER_INVENTORY_CSV = (
     BASE_DIR / "ai" / "data" / "processed_dataset" / "inventory.csv"
@@ -79,6 +79,7 @@ scheduler = BackgroundScheduler()
 @app.on_event("startup")
 def startup():
     global CURRENT_CONFIG
+
     saved = load_config()
     if saved:
         CURRENT_CONFIG = saved
@@ -107,7 +108,10 @@ def save_agent_config(config: dict):
 
 @app.get("/api/agent/config")
 def get_agent_config():
-    return {"has_config": CURRENT_CONFIG is not None, "config": CURRENT_CONFIG}
+    return {
+        "has_config": CURRENT_CONFIG is not None,
+        "config": CURRENT_CONFIG,
+    }
 
 def get_final_agent_config() -> dict:
     if CURRENT_CONFIG:
@@ -120,6 +124,41 @@ def get_final_agent_config() -> dict:
 @app.get("/")
 def health():
     return {"status": "running"}
+
+# =================================================
+# DASHBOARD STATS  ✅ (FIXED ENDPOINT)
+# =================================================
+@app.get("/api/dashboard/stats")
+def dashboard_stats():
+    inventory_df = pd.read_csv(OWNER_INVENTORY_CSV)
+
+    healthy = int((inventory_df["current_stock"] > 20).sum())
+    low = int(((inventory_df["current_stock"] <= 20) & (inventory_df["current_stock"] > 5)).sum())
+    critical = int((inventory_df["current_stock"] <= 5).sum())
+
+    total_spent_wei = sum(tx["amount_wei"] for tx in TRANSACTIONS)
+    total_spent_pol = total_spent_wei / 1e18
+    total_spent_inr = int(total_spent_pol * POL_TO_INR)
+
+    monthly_budget = (
+        CURRENT_CONFIG.get("monthlyBudget")
+        if CURRENT_CONFIG
+        else DEFAULT_CONFIG["monthly_budget"]
+    )
+
+    return {
+        "aiStatus": {
+            "isActive": CURRENT_CONFIG is not None,
+            "monthlyBudget": monthly_budget,
+            "budgetUsed": total_spent_inr,
+            "budgetRemaining": max(monthly_budget - total_spent_inr, 0),
+        },
+        "stockHealth": {
+            "healthy": healthy,
+            "low": low,
+            "critical": critical,
+        },
+    }
 
 # =================================================
 # PREVIEW (NO STATE CHANGES)
@@ -154,10 +193,8 @@ def run_restock(execute_payments: bool = False):
         if total_spent + amount_wei > USER_BALANCE_WEI:
             continue
 
-        # -------------------------------------------------
-        # ATOMIC SUPPLIER STOCK CHECK + RESERVE
-        # -------------------------------------------------
-        update_result = supplier_inventory_collection.update_one(
+        # ATOMIC SUPPLIER RESERVE
+        update = supplier_inventory_collection.update_one(
             {
                 "product": product,
                 "supplier_id": supplier_id,
@@ -169,14 +206,9 @@ def run_restock(execute_payments: bool = False):
             },
         )
 
-        if update_result.modified_count == 0:
-            # Supplier stock changed / race condition
-            print(f"⚠️ Supplier stock insufficient for {product}")
+        if update.modified_count == 0:
             continue
 
-        # -------------------------------------------------
-        # PAYMENT
-        # -------------------------------------------------
         tx = send_payment(
             to_address=intent["supplier_address"],
             amount_wei=amount_wei,
@@ -195,24 +227,16 @@ def run_restock(execute_payments: bool = False):
             "timestamp": datetime.utcnow().isoformat(),
         })
 
-        # -------------------------------------------------
-        # UPDATE OWNER INVENTORY (CSV)
-        # -------------------------------------------------
         owner_df.loc[
             owner_df["product"] == product, "current_stock"
         ] += qty
 
     owner_df.to_csv(OWNER_INVENTORY_CSV, index=False)
 
-    # -------------------------------------------------
-    # SAFE WHATSAPP MESSAGE (LIMITED)
-    # -------------------------------------------------
-    msg_items = "\n".join(ordered_items[:20])
     send_whatsapp_message(
         f"✅ StockEasy Restock Complete\n"
         f"Cycle: {result['cycle_id']}\n"
-        f"Orders: {len(ordered_items)}\n\n"
-        f"{msg_items}"
+        f"Orders: {len(ordered_items)}"
     )
 
     return {
@@ -230,7 +254,7 @@ def transactions():
     return {"count": len(TRANSACTIONS), "transactions": TRANSACTIONS}
 
 # =================================================
-# SIMULATION (SECURITY DEMO)
+# SIMULATION
 # =================================================
 @app.post("/api/transaction/simulate")
 def simulate(tx: TransactionRequest):

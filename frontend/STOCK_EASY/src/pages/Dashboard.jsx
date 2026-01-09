@@ -38,26 +38,20 @@ function Dashboard() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
 
-  const fetchAgentData = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/run-restock`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ execute_payments: false })
-      });
-      // const res = await fetch("http://localhost:8000/run-restock", {
-      //   method: "POST",
-      // });
+const fetchAgentData = async () => {
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/run-restock?execute_payments=false`,
+      { method: "POST" }
+    );
 
-      if (!res.ok) throw new Error("Failed to fetch agent data");
-      const json = await res.json();
-      setData(json);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+    if (!res.ok) throw new Error("Failed to fetch agent data");
+    const json = await res.json();
+    setData(json);
+  } catch (err) {
+    setError(err.message);
+  }
+};
 
   useEffect(() => {
     fetchAgentData();
