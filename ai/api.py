@@ -126,14 +126,17 @@ def health():
     return {"status": "running"}
 
 # =================================================
-# DASHBOARD STATS  ✅ (FIXED ENDPOINT)
+# DASHBOARD STATS (HOME PAGE)
 # =================================================
 @app.get("/api/dashboard/stats")
 def dashboard_stats():
     inventory_df = pd.read_csv(OWNER_INVENTORY_CSV)
 
     healthy = int((inventory_df["current_stock"] > 20).sum())
-    low = int(((inventory_df["current_stock"] <= 20) & (inventory_df["current_stock"] > 5)).sum())
+    low = int(
+        ((inventory_df["current_stock"] <= 20) &
+         (inventory_df["current_stock"] > 5)).sum()
+    )
     critical = int((inventory_df["current_stock"] <= 5).sum())
 
     total_spent_wei = sum(tx["amount_wei"] for tx in TRANSACTIONS)
@@ -142,8 +145,7 @@ def dashboard_stats():
 
     monthly_budget = (
         CURRENT_CONFIG.get("monthlyBudget")
-        if CURRENT_CONFIG
-        else DEFAULT_CONFIG["monthly_budget"]
+        if CURRENT_CONFIG else DEFAULT_CONFIG["monthly_budget"]
     )
 
     return {

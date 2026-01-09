@@ -12,7 +12,7 @@ from .ml.predict import predict_7_day_demand
 from .default_config import DEFAULT_CONFIG
 
 from backend.db import supplier_inventory_collection
-v 
+
 # ===============================
 # LOGGING
 # ===============================
