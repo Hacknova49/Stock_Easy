@@ -40,10 +40,7 @@ function Dashboard() {
 
 const fetchAgentData = async () => {
   try {
-    const res = await fetch(
-      `${API_BASE_URL}/run-restock?execute_payments=false`,
-      { method: "POST" }
-    );
+    const res = await fetch(`${API_BASE_URL}/restock-items`);
 
     if (!res.ok) throw new Error("Failed to fetch agent data");
     const json = await res.json();
@@ -52,6 +49,7 @@ const fetchAgentData = async () => {
     setError(err.message);
   }
 };
+
 
   useEffect(() => {
     fetchAgentData();

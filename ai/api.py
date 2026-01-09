@@ -126,26 +126,35 @@ def health():
     return {"status": "running"}
 
 # =================================================
-# DASHBOARD STATS (HOME PAGE)
+# DASHBOARD STATS (USED BY HOME PAGE)
 # =================================================
 @app.get("/api/dashboard/stats")
 def dashboard_stats():
+    """
+    Lightweight dashboard stats for Home.jsx
+    (NO restock execution, NO payments)
+    """
+
+    # -----------------------------
+    # Load owner inventory
+    # -----------------------------
     inventory_df = pd.read_csv(OWNER_INVENTORY_CSV)
 
     healthy = int((inventory_df["current_stock"] > 20).sum())
-    low = int(
-        ((inventory_df["current_stock"] <= 20) &
-         (inventory_df["current_stock"] > 5)).sum()
-    )
+    low = int(((inventory_df["current_stock"] <= 20) & (inventory_df["current_stock"] > 5)).sum())
     critical = int((inventory_df["current_stock"] <= 5).sum())
 
-    total_spent_wei = sum(tx["amount_wei"] for tx in TRANSACTIONS)
+    # -----------------------------
+    # Budget usage from transactions
+    # -----------------------------
+    total_spent_wei = sum(t["amount_wei"] for t in TRANSACTIONS)
     total_spent_pol = total_spent_wei / 1e18
     total_spent_inr = int(total_spent_pol * POL_TO_INR)
 
     monthly_budget = (
         CURRENT_CONFIG.get("monthlyBudget")
-        if CURRENT_CONFIG else DEFAULT_CONFIG["monthly_budget"]
+        if CURRENT_CONFIG
+        else DEFAULT_CONFIG["monthly_budget"]
     )
 
     return {
@@ -161,6 +170,7 @@ def dashboard_stats():
             "critical": critical,
         },
     }
+
 
 # =================================================
 # PREVIEW (NO STATE CHANGES)
