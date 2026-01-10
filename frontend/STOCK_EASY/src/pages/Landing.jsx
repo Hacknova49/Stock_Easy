@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { LayoutDashboard, TrendingUp, Shield, HeadphonesIcon, BarChart3, Users, Zap, Check } from "lucide-react";
 import Squares from "../components/Squares";
+import Shuffle from "../components/Shuffle";
 import "./Landing.css";
 
 function Landing() {
@@ -21,7 +22,7 @@ function Landing() {
       {/* Navigation */}
       <nav className="landing-nav">
         <div className="nav-brand">
-          <span className="brand-icon">📊</span>
+          <img src="/src/assets/stock easy photo.png" alt="StockEasy" className="brand-logo" />
           <span className="brand-name">StockEasy</span>
         </div>
         <div className="nav-links">
@@ -37,7 +38,21 @@ function Landing() {
 
       {/* Hero Section */}
       <section className="hero-section">
-        <h1 className="hero-title">STOCK EASY</h1>
+        <div className="hero-title">
+          <Shuffle
+            text="STOCK EASY"
+            shuffleDirection="right"
+            duration={0.35}
+            animationMode="evenodd"
+            shuffleTimes={1}
+            ease="power3.out"
+            stagger={0.03}
+            threshold={0.1}
+            triggerOnce
+            triggerOnHover
+            respectReducedMotion
+          />
+        </div>
         <p className="hero-subtitle">
           Welcome to StockEasy — Your AI-Powered Solution for Inventory Insights and
           Automated Payment Processing
@@ -47,7 +62,7 @@ function Landing() {
             <Zap size={18} />
             Start trial now
           </Link>
-          <button className="btn-secondary">Book demo</button>
+          <button className="btn-secondary">Demo Video</button>
         </div>
       </section>
 
