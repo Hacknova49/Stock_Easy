@@ -132,6 +132,7 @@ new terminal cd ai
 uvicorn api:app --reload
 # or
 python -m uvicorn api:app --reload
+python -m uvicorn ai.api:app --reload
 ```
 ##backend
 
