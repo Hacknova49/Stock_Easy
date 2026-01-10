@@ -288,7 +288,7 @@ function Dashboard() {
           <div id="analytics-section" style={{ display: 'contents' }}>
             {/* Main Bar Chart (Category Restock) */}
             <ChartCard title="Restock by Category (Quantity)" className="chart-section-large">
-              <div style={{ flex: 1, minHeight: '500px', width: '100%' }}>
+              <div className="chart-container-responsive" style={{ flex: 1, width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData.categoryData} barSize={40}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />

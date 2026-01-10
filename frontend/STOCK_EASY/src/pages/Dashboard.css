@@ -654,14 +654,36 @@ body {
 
 .status-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     padding: 0.75rem;
     background: rgba(255, 255, 255, 0.03);
     border-radius: 12px;
 }
 
-/* Responsive Styles */
+/* Base Chart Container Height (Desktop) */
+.chart-container-responsive {
+    min-height: 500px;
+}
+
+/* Laptop / Small Desktop (1200px - 1440px) */
+@media (max-width: 1440px) {
+    .chart-section-large {
+        min-height: 400px;
+    }
+
+    .chart-container-responsive {
+        min-height: 380px;
+    }
+
+    .summary-card {
+        height: 140px;
+    }
+
+    .summary-value {
+        font-size: 1.6rem;
+    }
+}
+
+/* Tablet / Small Laptop (992px - 1200px) */
 @media (max-width: 1200px) {
     .dashboard-grid {
         grid-template-columns: repeat(2, 1fr);
