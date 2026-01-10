@@ -199,7 +199,7 @@ function ControlPanel() {
             <main className="cp-main">
                 <header className="main-header">
                     <div className="breadcrumb">
-                        <span>Dashboards</span>
+                        <Link to="/dashboard" className="breadcrumb-link">Dashboards</Link>
                         <ChevronRight size={14} />
                         <span className="current">Control Panel</span>
                     </div>

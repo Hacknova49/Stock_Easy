@@ -225,6 +225,16 @@
     color: #e0e0e0;
 }
 
+.breadcrumb-link {
+    color: #6b7280;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+    color: #4ade80;
+}
+
 .header-actions {
     display: flex;
     align-items: center;
@@ -289,8 +299,8 @@
 .cp-dashboard .main-content {
     margin-left: 1rem;
     padding-left: 0;
-    margin-right:1rem;
-    padding-right:0;
+    margin-right: 1rem;
+    padding-right: 0;
 }
 
 /* Stats Row */
