@@ -159,7 +159,7 @@ function Landing() {
             </p>
             <div className="plan-price">
               <span className="currency">₹</span>
-              <span className="amount">50</span>
+              <span className="amount">500</span>
               <span className="period">/month</span>
             </div>
             <Link to="/homepage" className="plan-cta">Buy now</Link>
@@ -177,7 +177,7 @@ function Landing() {
             </p>
             <div className="plan-price">
               <span className="currency">₹</span>
-              <span className="amount">60</span>
+              <span className="amount">2000</span>
               <span className="period">/month</span>
             </div>
             <Link to="/homepage" className="plan-cta">Buy now</Link>
@@ -196,7 +196,7 @@ function Landing() {
             </p>
             <div className="plan-price">
               <span className="currency">₹</span>
-              <span className="amount">12</span>
+              <span className="amount">6000</span>
               <span className="period">/month</span>
             </div>
             <Link to="/homepage" className="plan-cta">Buy now</Link>
