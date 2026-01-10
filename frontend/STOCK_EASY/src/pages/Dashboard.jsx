@@ -87,8 +87,8 @@ const ActiveStatusCard = ({ data, config }) => (
 );
 
 const ChartCard = ({ title, children, className, actionElement, style }) => (
-  <div className={`card ${className}`} style={style}>
-    <div className="summary-header" style={{ marginBottom: '1.5rem' }}>
+  <div className={`card ${className}`} style={{ display: 'flex', flexDirection: 'column', ...style }}>
+    <div className="summary-header" style={{ marginBottom: '1rem', flexShrink: 0 }}>
       <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'white' }}>{title}</h3>
       {actionElement ? actionElement : (
         <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.8rem' }}>
@@ -97,7 +97,9 @@ const ChartCard = ({ title, children, className, actionElement, style }) => (
         </div>
       )}
     </div>
-    {children}
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      {children}
+    </div>
   </div>
 );
 
@@ -278,8 +280,8 @@ function Dashboard() {
           <div id="analytics-section" style={{ display: 'contents' }}>
             {/* Main Bar Chart (Category Restock) */}
             <ChartCard title="Restock by Category (Quantity)" className="chart-section-large">
-              <div className="chart-container-responsive" style={{ width: '100%' }}>
-                <ResponsiveContainer width="100%" height={280}>
+              <div className="chart-container-responsive" style={{ width: '100%', flex: 1, minHeight: '280px' }}>
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData.categoryData} barSize={40}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />
