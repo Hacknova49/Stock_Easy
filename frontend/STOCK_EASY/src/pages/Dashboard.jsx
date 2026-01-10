@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   PieChart,
   Pie,
@@ -37,90 +37,107 @@ const COLORS = {
 function Dashboard() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-const fetchAgentData = async () => {
-  try {
-    const res = await fetch(`${API_BASE_URL}/restock-items`);
+  const fetchAgentData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const res = await fetch(`${API_BASE_URL}/restock-items`, {
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
 
-    if (!res.ok) throw new Error("Failed to fetch agent data");
-    const json = await res.json();
-    setData(json);
-  } catch (err) {
-    setError(err.message);
-  }
-};
-
+      if (!res.ok) throw new Error(`Failed to fetch data: ${res.status}`);
+      const json = await res.json();
+      setData(json);
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        setError('Backend service is slow to respond. This may be due to server cold start. Try again in a few moments.');
+      } else {
+        setError(`Connection error: ${err.message}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchAgentData();
-    const interval = setInterval(fetchAgentData, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    // Only set up polling if initial fetch succeeds
+    const setupPolling = () => {
+      const interval = setInterval(fetchAgentData, 120000); // Increased to 2 minutes
+      return () => clearInterval(interval);
+    };
+    
+    return () => {
+      // Cleanup will be handled by the polling interval
+    };
+  }, [fetchAgentData]);
 
-  if (error) {
-    return (
-      <div className="error-container">
-        <div className="error-icon">❌</div>
-        <p className="error-text">Error: {error}</p>
-      </div>
-    );
-  }
+  // Process data for charts (memoized)
+  const chartData = useMemo(() => {
+    if (!data) return null;
 
-  if (!data) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p className="loading-text">Loading AI Agent Data...</p>
-      </div>
-    );
-  }
-
-  // Process data for charts
-  const supplierSpendData = Object.entries(data.supplier_spend || {}).map(([key, value]) => ({
-    name: key,
-    value: value,
-    displayValue: `₹${value.toLocaleString()}`,
-  }));
-
-  // Category distribution
-  const categoryMap = {};
-  data.decisions.forEach((d) => {
-    if (!categoryMap[d.category]) {
-      categoryMap[d.category] = { count: 0, quantity: 0, cost: 0 };
-    }
-    categoryMap[d.category].count++;
-    categoryMap[d.category].quantity += d.restock_quantity;
-    categoryMap[d.category].cost += d.total_cost;
-  });
-
-  const categoryData = Object.entries(categoryMap)
-    .map(([name, { quantity }]) => ({ name: name.substring(0, 15), quantity }))
-    .sort((a, b) => b.quantity - a.quantity)
-    .slice(0, 6);
-
-  // Priority distribution
-  const priorityMap = { 1: 0, 2: 0, 3: 0 };
-  data.decisions.forEach((d) => {
-    priorityMap[d.priority]++;
-  });
-
-  const priorityData = [
-    { name: "Low (1)", value: priorityMap[1], fill: COLORS.priority[0] },
-    { name: "Medium (2)", value: priorityMap[2], fill: COLORS.priority[1] },
-    { name: "High (3)", value: priorityMap[3], fill: COLORS.priority[2] },
-  ];
-
-  // Stock vs Demand comparison (top 8)
-  const stockDemandData = data.decisions
-    .slice(0, 8)
-    .map((d) => ({
-      name: d.product.substring(0, 12),
-      stock: d.current_stock,
-      demand: d.predicted_7d_demand,
+    const supplierSpendData = Object.entries(data.supplier_spend || {}).map(([key, value]) => ({
+      name: key,
+      value: value,
+      displayValue: `₹${value.toLocaleString()}`,
     }));
 
-  // Budget percentage
-  const budgetPercentage = ((data.total_spent / data.monthly_budget) * 100).toFixed(1);
+    // Category distribution
+    const categoryMap = {};
+    data.decisions.forEach((d) => {
+      if (!categoryMap[d.category]) {
+        categoryMap[d.category] = { count: 0, quantity: 0, cost: 0 };
+      }
+      categoryMap[d.category].count++;
+      categoryMap[d.category].quantity += d.restock_quantity;
+      categoryMap[d.category].cost += d.total_cost;
+    });
+
+    const categoryData = Object.entries(categoryMap)
+      .map(([name, { quantity }]) => ({ name: name.substring(0, 15), quantity }))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 6);
+
+    // Priority distribution
+    const priorityMap = { 1: 0, 2: 0, 3: 0 };
+    data.decisions.forEach((d) => {
+      priorityMap[d.priority]++;
+    });
+
+    const priorityData = [
+      { name: "Low (1)", value: priorityMap[1], fill: COLORS.priority[0] },
+      { name: "Medium (2)", value: priorityMap[2], fill: COLORS.priority[1] },
+      { name: "High (3)", value: priorityMap[3], fill: COLORS.priority[2] },
+    ];
+
+    // Stock vs Demand comparison (top 8)
+    const stockDemandData = data.decisions
+      .slice(0, 8)
+      .map((d) => ({
+        name: d.product.substring(0, 12),
+        stock: d.current_stock,
+        demand: d.predicted_7d_demand,
+      }));
+
+    // Budget percentage
+    const budgetPercentage = ((data.total_spent / data.monthly_budget) * 100).toFixed(1);
+
+    return {
+      supplierSpendData,
+      categoryData,
+      priorityData,
+      stockDemandData,
+      budgetPercentage
+    };
+  }, [data]);
 
   // Priority label helper
   const getPriorityLabel = (priority) => {
@@ -147,6 +164,55 @@ const fetchAgentData = async () => {
     }
     return null;
   };
+
+  if (error) {
+    return (
+      <div className="error-container">
+        <div className="error-icon">❌</div>
+        <p className="error-text">{error}</p>
+        <div className="error-actions">
+          <button onClick={fetchAgentData} className="retry-button" disabled={loading}>
+            {loading ? 'Retrying...' : 'Retry'}
+          </button>
+          <button onClick={() => window.location.reload()} className="refresh-button">
+            Refresh Page
+          </button>
+        </div>
+        <div className="error-tips">
+          <p className="error-tip">💡 Tips:</p>
+          <ul className="error-tip-list">
+            <li>The backend may be starting up (cold start)</li>
+            <li>Check your internet connection</li>
+            <li>Try refreshing the page</li>
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
+  // Debug fallback - ensure something always renders
+  if (loading && !data) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Loading AI Agent Data...</p>
+        <p className="loading-subtitle">Connecting to backend service...</p>
+        <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}>
+          <p style={{ color: '#fbbf24', fontSize: '0.9rem' }}>Debug: Loading state active</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || !data) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Loading AI Agent Data...</p>
+        <p className="loading-subtitle">Connecting to backend service...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-page">
@@ -209,13 +275,13 @@ const fetchAgentData = async () => {
           <div className="budget-progress-container">
             <div className="budget-progress-label">
               <span>Budget Utilization</span>
-              <span>{budgetPercentage}%</span>
+              <span>{chartData.budgetPercentage}%</span>
             </div>
             <div className="budget-progress-bar">
               <div
-                className={`budget-progress-fill ${budgetPercentage > 90 ? "danger" : budgetPercentage > 70 ? "warning" : ""
+                className={`budget-progress-fill ${chartData.budgetPercentage > 90 ? "danger" : chartData.budgetPercentage > 70 ? "warning" : ""
                   }`}
-                style={{ width: `${Math.min(budgetPercentage, 100)}%` }}
+                style={{ width: `${Math.min(chartData.budgetPercentage, 100)}%` }}
               ></div>
             </div>
           </div>
@@ -233,7 +299,7 @@ const fetchAgentData = async () => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={supplierSpendData}
+                    data={chartData.supplierSpendData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -243,7 +309,7 @@ const fetchAgentData = async () => {
                     label={({ name, displayValue }) => `${name}: ${displayValue}`}
                     labelLine={{ stroke: "#8080a0" }}
                   >
-                    {supplierSpendData.map((entry, index) => (
+                    {chartData.supplierSpendData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS.suppliers[index % COLORS.suppliers.length]}
@@ -273,7 +339,7 @@ const fetchAgentData = async () => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={priorityData}
+                    data={chartData.priorityData}
                     cx="50%"
                     cy="50%"
                     outerRadius={100}
@@ -281,7 +347,7 @@ const fetchAgentData = async () => {
                     label={({ name, value }) => `${name}: ${value}`}
                     labelLine={{ stroke: "#8080a0" }}
                   >
-                    {priorityData.map((entry, index) => (
+                    {chartData.priorityData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                   </Pie>
@@ -307,7 +373,7 @@ const fetchAgentData = async () => {
             </h3>
             <div className="chart-container">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categoryData} layout="vertical">
+                <BarChart data={chartData.categoryData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(100, 100, 180, 0.2)" />
                   <XAxis type="number" stroke="#8080a0" />
                   <YAxis
@@ -335,7 +401,7 @@ const fetchAgentData = async () => {
             </h3>
             <div className="chart-container">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stockDemandData}>
+                <BarChart data={chartData.stockDemandData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(100, 100, 180, 0.2)" />
                   <XAxis dataKey="name" stroke="#8080a0" tick={{ fontSize: 10 }} />
                   <YAxis stroke="#8080a0" />
