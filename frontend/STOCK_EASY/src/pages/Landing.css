@@ -951,17 +951,6 @@
         right: -20px;
         bottom: -10px;
     }
-
-    .floating-dashboard-btn {
-        bottom: 1.5rem;
-        right: 1.5rem;
-        width: 48px;
-        height: 48px;
-    }
-
-    .dashboard-tooltip {
-        display: none;
-    }
 }
 
 @media (max-width: 480px) {

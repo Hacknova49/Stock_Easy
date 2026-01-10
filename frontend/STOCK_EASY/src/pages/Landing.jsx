@@ -208,7 +208,7 @@ function Landing() {
       {/* Newsletter Footer */}
       <footer className="landing-footer">
         <div className="footer-brand">
-          <span className="brand-icon">📊</span>
+          <img src="/src/assets/stock easy photo.png" alt="StockEasy" className="brand-logo" />
           <span className="brand-name">StockEasy</span>
         </div>
         <h3 className="footer-title">Sign up for the StockEasy Newsletter</h3>
@@ -220,12 +220,6 @@ function Landing() {
         </div>
         <p className="footer-copyright">© 2026 StockEasy. All rights reserved.</p>
       </footer>
-
-      {/* Floating Dashboard Button */}
-      <Link to="/dashboard" className="floating-dashboard-btn">
-        <LayoutDashboard size={24} />
-        <span className="dashboard-tooltip">Dashboard</span>
-      </Link>
     </div>
   );
 }
