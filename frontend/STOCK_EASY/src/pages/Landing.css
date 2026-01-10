@@ -535,21 +535,36 @@
 }
 
 .pricing-card {
+    position: relative;
     background: linear-gradient(180deg, rgba(20, 25, 20, 0.8) 0%, rgba(15, 18, 15, 0.9) 100%);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 2.5rem 2rem;
     text-align: left;
     transition: all 0.3s ease;
+    opacity: 0.5;
+    pointer-events: none;
 }
 
-.pricing-card:hover {
-    border-color: rgba(34, 197, 94, 0.3);
-    transform: translateY(-5px);
+.pricing-card::after {
+    content: 'Coming Soon';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    z-index: 5;
 }
 
 .pricing-card.featured {
-    border-color: rgba(34, 197, 94, 0.4);
+    border-color: rgba(34, 197, 94, 0.2);
     background: linear-gradient(180deg, rgba(25, 35, 25, 0.9) 0%, rgba(18, 25, 18, 0.95) 100%);
 }
 
