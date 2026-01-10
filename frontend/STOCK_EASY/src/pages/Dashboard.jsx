@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   LayoutDashboard, ShoppingCart, BarChart2, MessageSquare, Globe, Users, Settings, Bell, LogOut,
-  ChevronDown, Search, Activity, MoreHorizontal, ArrowUpRight, ArrowDownRight, Wallet, Package, Menu
+  ChevronDown, Search, Activity, MoreHorizontal, ArrowUpRight, ArrowDownRight, Wallet, Package, Menu, TrendingUp
 } from "lucide-react";
 import "./Dashboard.css";
 
@@ -103,42 +103,49 @@ const StatCard = ({ title, value, subtext, icon: Icon, color }) => (
 const ActiveStatusCard = ({ data, config }) => (
   <div className="card summary-card">
     <div className="summary-header">
-      <span>Active Status</span>
-      <MoreHorizontal size={16} />
+      <span>System Status</span>
     </div>
-    <div>
-      <div className="status-row">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Globe size={14} color="#8b5cf6" />
-          <span style={{ fontSize: '0.9rem', color: '#fff' }}>Network</span>
-        </div>
-        <span style={{ fontSize: '0.9rem', color: '#8b5cf6' }}>Polygon Amoy</span>
-      </div>
-      <div className="status-row">
+    <div style={{
+      maxHeight: '180px',
+      overflowY: 'auto',
+      paddingRight: '0.5rem',
+      scrollbarWidth: 'none', /* Firefox */
+      msOverflowStyle: 'none'  /* IE and Edge */
+    }}
+      className="hide-scrollbar"
+    >
+      <div className="status-row" style={{ marginBottom: '0.75rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Activity size={14} color="#3b82f6" />
-          <span style={{ fontSize: '0.9rem', color: '#fff' }}>SKUs</span>
+          <span style={{ fontSize: '0.9rem', color: '#fff' }}>Active SKUs</span>
         </div>
         <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{data?.active_skus_processed || 0}</span>
       </div>
       {config && (
         <>
-          <div className="status-row">
+          <div className="status-row" style={{ marginBottom: '0.75rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Package size={14} color="#10b981" />
-              <span style={{ fontSize: '0.9rem', color: '#fff' }}>Buffer Stock</span>
+              <span style={{ fontSize: '0.9rem', color: '#fff' }}>Buffer</span>
             </div>
-            <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{config.bufferStock} days</span>
+            <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{config.bufferStock}d</span>
           </div>
-          <div className="status-row">
+          <div className="status-row" style={{ marginBottom: '0.75rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Activity size={14} color="#f59e0b" />
+              <TrendingUp size={14} color="#f59e0b" />
               <span style={{ fontSize: '0.9rem', color: '#fff' }}>Min Demand</span>
             </div>
-            <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{config.minDemand} units</span>
+            <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{config.minDemand}</span>
           </div>
         </>
       )}
+      <div className="status-row">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Globe size={14} color="#8b5cf6" />
+          <span style={{ fontSize: '0.9rem', color: '#fff' }}>Network</span>
+        </div>
+        <span style={{ fontSize: '0.85rem', color: '#8b5cf6' }}>Polygon</span>
+      </div>
     </div>
   </div>
 );

@@ -88,7 +88,7 @@ function Landing() {
             Automated Payment Processing
           </p>
           <div className="hero-buttons">
-            <Link to="/homepage" className="btn-primary">
+            <Link to="/control-panel" className="btn-primary">
               <Zap size={18} />
               Start trial now
             </Link>
@@ -229,7 +229,7 @@ function Landing() {
             pathways. StockEasy support team is also available 24/7 to address
             emergencies.
           </p>
-          <Link to="/homepage" className="btn-outline">More About Us</Link>
+          <Link to="/control-panel" className="btn-outline">Get Started</Link>
         </div>
       </section>
 
