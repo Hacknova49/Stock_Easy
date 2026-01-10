@@ -1,14 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { LayoutDashboard, TrendingUp, Shield, HeadphonesIcon, BarChart3, Users, Zap, Check } from "lucide-react";
+import { LayoutDashboard, TrendingUp, Shield, HeadphonesIcon, BarChart3, Users, Zap, Check, Menu, X } from "lucide-react";
 import Squares from "../components/Squares";
 import Shuffle from "../components/Shuffle";
 import WorkflowAnimation from "../components/WorkflowAnimation";
 import "./Landing.css";
 
 function Landing() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
-    <div className="landing-page">
+    <div className={`landing-page ${isMenuOpen ? 'menu-open' : ''}`} style={{ scrollBehavior: 'smooth' }}>
       {/* Grid Background */}
       <div className="grid-background">
         <Squares
@@ -23,17 +29,38 @@ function Landing() {
       {/* Navigation */}
       <nav className="landing-nav">
         <div className="nav-brand">
-          <img src="/src/assets/stock easy photo.png" alt="StockEasy" className="brand-logo" />
           <span className="brand-name">StockEasy</span>
         </div>
+
+        {/* Desktop Links */}
         <div className="nav-links">
           <a href="#features" className="nav-link">Features</a>
           <a href="#pricing" className="nav-link">Pricing</a>
           <a href="#about" className="nav-link">About</a>
+          <Link to="/dashboard" className="nav-link">Dashboard</Link>
+          <Link to="/control-panel" className="nav-link">Control Panel</Link>
         </div>
+
         <div className="nav-actions">
           <Link to="/homepage" className="nav-signin">Sign In</Link>
           <Link to="/homepage" className="nav-cta">Get Started</Link>
+
+          {/* Mobile Menu Toggle */}
+          <button className="mobile-menu-btn" onClick={toggleMenu} aria-label="Toggle menu">
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu Overlay */}
+        <div className={`mobile-menu-overlay ${isMenuOpen ? 'active' : ''}`}>
+          <div className="mobile-nav-links">
+            <a href="#features" className="mobile-nav-link" onClick={toggleMenu}>Features</a>
+            <a href="#pricing" className="mobile-nav-link" onClick={toggleMenu}>Pricing</a>
+            <a href="#about" className="mobile-nav-link" onClick={toggleMenu}>About</a>
+            <Link to="/dashboard" className="mobile-nav-link" onClick={toggleMenu}>Dashboard</Link>
+            <Link to="/control-panel" className="mobile-nav-link" onClick={toggleMenu}>Control Panel</Link>
+            <Link to="/get-started" className="mobile-nav-link highlight" onClick={toggleMenu}>Get Started</Link>
+          </div>
         </div>
       </nav>
 

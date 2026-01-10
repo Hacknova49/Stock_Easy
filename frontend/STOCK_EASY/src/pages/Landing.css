@@ -114,7 +114,10 @@
     z-index: 10;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    /* Changed from space-between */
+    gap: 15rem;
+    /* Bring them closer */
     padding: 8rem 6rem 5rem;
     max-width: 1400px;
     margin: 0 auto;
@@ -402,6 +405,8 @@
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent, rgba(34, 197, 94, 0.3));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    /* Standard property */
     mask-composite: exclude;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -795,7 +800,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
     transition: all 0.3s ease;
 }
 
@@ -804,6 +808,123 @@
     transform: scale(1.05);
 }
 
+/* =========================================
+   Responsive Design
+   ========================================= */
+
+/* Tablet & Smaller Laptops */
+@media (max-width: 1024px) {
+    .landing-nav {
+        padding: 1rem 2rem;
+    }
+
+    .hero-section {
+        padding: 6rem 2rem 4rem;
+        flex-direction: column;
+        text-align: center;
+        gap: 4rem;
+    }
+
+    .hero-content {
+        max-width: 100%;
+        text-align: center;
+    }
+
+    .hero-subtitle {
+        margin: 0 auto 2rem;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+
+    .services-grid,
+    .pricing-grid {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0 1rem;
+    }
+
+    .about-section {
+        flex-direction: column;
+        text-align: center;
+        gap: 3rem;
+        padding: 4rem 2rem;
+    }
+
+    .about-content {
+        text-align: center;
+    }
+
+    .about-description {
+        margin: 0 auto 2rem;
+    }
+}
+
+/* Mobile & Tablets */
+@media (max-width: 768px) {
+    .landing-nav {
+        padding: 1rem;
+    }
+
+    .nav-links {
+        display: none;
+        /* Simplified mobile nav */
+    }
+
+    .hero-title {
+        font-size: 2.75rem;
+        /* Smaller font for mobile */
+    }
+
+    .hero-section {
+        min-height: auto;
+        padding: 5rem 1.5rem 3rem;
+    }
+
+    .services-grid,
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        /* Stack cards */
+    }
+
+    .pricing-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .about-circle {
+        width: 220px;
+        height: 220px;
+    }
+
+    .newsletter-form {
+        flex-direction: column;
+        background: transparent;
+        gap: 1rem;
+    }
+
+    .newsletter-input {
+        width: 100%;
+        text-align: center;
+    }
+
+    .landing-footer {
+        padding: 3rem 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+    }
+
+    .services-section,
+    .pricing-section,
+    .about-section {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+
+
 .social-links {
     display: flex;
     align-items: center;
@@ -811,6 +932,277 @@
     gap: 1rem;
     margin-bottom: 2rem;
 }
+
+.social-link {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.6);
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    background: #22c55e;
+    color: #000000;
+    transform: translateY(-3px);
+}
+
+/* Mobile Menu Styles */
+.mobile-menu-btn {
+    display: none;
+    /* Hidden on desktop */
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    z-index: 1100;
+    padding: 0.5rem;
+}
+
+.mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(10, 10, 10, 0.95);
+    backdrop-filter: blur(20px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.mobile-menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.mobile-nav-link {
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.mobile-nav-link:hover {
+    color: #22c55e;
+    transform: scale(1.05);
+}
+
+.mobile-nav-link.highlight {
+    color: #22c55e;
+    font-size: 1.75rem;
+}
+
+/* Ensure Nav Links are Flex on Desktop */
+/* Ensure Nav Links are Flex on Desktop */
+/* Ensure Nav Links are Flex on Desktop */
+.nav-links {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: nowrap !important;
+    white-space: nowrap;
+}
+
+/* Nav Link Animation */
+.nav-link {
+    position: relative;
+    padding: 0.5rem 0;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #22c55e;
+    transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+/* Wide Screen Optimization (1600px+) */
+/* Wide Screen Optimization (1600px+) */
+@media (min-width: 1600px) {
+    .landing-nav {
+        padding: 1.5rem 15%;
+        /* More padding */
+    }
+
+    .nav-brand .brand-name {
+        font-size: 1.75rem;
+        /* Bigger brand */
+    }
+
+    .nav-link {
+        font-size: 1.1rem;
+        /* Bigger links */
+    }
+
+    .nav-cta,
+    .nav-signin {
+        font-size: 1.1rem;
+        padding: 0.75rem 1.5rem;
+    }
+
+    .hero-section,
+    .services-grid,
+    .pricing-grid,
+    .about-section {
+        max-width: 1920px;
+        /* Allow much wider */
+    }
+
+    .hero-content {
+        max-width: 800px;
+    }
+
+    .hero-title {
+        font-size: 7rem;
+        /* Massive title */
+        margin-bottom: 2rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.5rem;
+        /* Bigger subtitle */
+        max-width: 650px;
+    }
+
+    .section-title {
+        font-size: 3.5rem;
+        /* Bigger section headers */
+    }
+
+    .section-subtitle {
+        font-size: 1.25rem;
+    }
+
+    .service-card,
+    .pricing-card {
+        padding: 3rem;
+        /* Bigger cards */
+    }
+
+    .service-title,
+    .plan-name {
+        font-size: 1.5rem;
+    }
+
+    .plan-price .amount {
+        font-size: 3.5rem;
+    }
+}
+
+/* Mobile & Tablets */
+@media (max-width: 1024px) {
+    .nav-links {
+        display: none;
+        /* Hide desktop links */
+    }
+
+    .mobile-menu-btn {
+        display: block;
+        /* Show hamburger */
+    }
+
+    .nav-actions {
+        gap: 0.5rem;
+    }
+
+    .nav-cta,
+    .nav-signin {
+        display: none;
+        /* Hide extra buttons */
+    }
+
+    /* Stack Hero Section */
+    .hero-section {
+        flex-direction: column;
+        text-align: center;
+        padding: 6rem 2rem 4rem;
+        gap: 4rem;
+        /* Smaller gap on mobile/tablet */
+    }
+
+    .hero-content {
+        max-width: 100%;
+        text-align: center;
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+
+    /* Ensure visuals are visible but stacked */
+    .hero-visuals {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+        display: flex;
+        /* Ensure it's shown */
+    }
+
+    .services-grid,
+    .pricing-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .about-section {
+        flex-direction: column;
+        text-align: center;
+        gap: 3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .services-grid,
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-visuals {
+        transform: scale(0.9);
+        /* Scale down slightly for mobile */
+    }
+}
+
+
+
+
+
 
 .footer-copyright {
     font-size: 0.85rem;
@@ -865,112 +1257,3 @@
 }
 
 /* Responsive Design */
-@media (max-width: 1024px) {
-    .landing-nav {
-        padding: 1rem 2rem;
-    }
-
-    .nav-links {
-        display: none;
-    }
-
-    .hero-section {
-        flex-direction: column;
-        padding: 8rem 3rem 4rem;
-        text-align: center;
-    }
-
-    .hero-content {
-        text-align: center;
-        max-width: 100%;
-    }
-
-    .hero-subtitle {
-        max-width: 100%;
-    }
-
-    .hero-buttons {
-        justify-content: center;
-    }
-
-    .hero-visuals {
-        display: none;
-    }
-
-    .services-grid,
-    .pricing-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .about-section {
-        flex-direction: column;
-        text-align: center;
-        padding: 3rem 2rem;
-    }
-
-    .about-content {
-        text-align: center;
-    }
-}
-
-@media (max-width: 768px) {
-    .hero-section {
-        padding: 8rem 1.5rem 3rem;
-    }
-
-    .hero-title {
-        font-size: 2.25rem;
-    }
-
-    .hero-buttons {
-        flex-direction: column;
-    }
-
-    .services-section,
-    .pricing-section {
-        padding: 3rem 1.5rem;
-    }
-
-    .services-grid,
-    .pricing-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .section-title {
-        font-size: 1.75rem;
-    }
-
-    .about-circle {
-        width: 200px;
-        height: 200px;
-    }
-
-    .about-decorator {
-        width: 80px;
-        height: 80px;
-        right: -20px;
-        bottom: -10px;
-    }
-}
-
-@media (max-width: 480px) {
-    .landing-nav {
-        padding: 1rem;
-    }
-
-    .nav-actions {
-        gap: 0.5rem;
-    }
-
-    .nav-signin {
-        display: none;
-    }
-
-    .hero-title {
-        font-size: 1.875rem;
-    }
-
-    .hero-subtitle {
-        font-size: 0.9rem;
-    }
-}
