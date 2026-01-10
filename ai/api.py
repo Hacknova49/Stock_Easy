@@ -191,6 +191,7 @@ def run_restock(execute_payments: bool = False):
 
     owner_df = pd.read_csv(OWNER_INVENTORY_CSV)
 
+    restocked_details = []
     for d in result["decisions"]:
         intent = d["payment_intent"]
         amount_wei = int(intent["amount_wei"])
@@ -231,6 +232,7 @@ def run_restock(execute_payments: bool = False):
         })
 
         owner_df.loc[owner_df["product"] == product, "current_stock"] += qty
+        restocked_details.append(f"• {product}: {qty} units")
 
     owner_df.to_csv(OWNER_INVENTORY_CSV, index=False)
 
@@ -240,9 +242,14 @@ def run_restock(execute_payments: bool = False):
         "critical": int((owner_df["current_stock"] <= 5).sum()),
     }
 
-    send_whatsapp_message(
-        f"✅ StockEasy Restock Complete\nCycle: {result['cycle_id']}"
-    )
+    msg_body = f"✅ StockEasy Restock Complete\nCycle: {result['cycle_id']}"
+    if restocked_details:
+        items_str = "\n".join(restocked_details)
+        msg_body += f"\n\nItems Restocked:\n{items_str}"
+    else:
+        msg_body += f"\n\nNo items were restocked in this cycle (check budget/stock)."
+
+    send_whatsapp_message(msg_body)
 
     return {"status": "success", "cycle_id": result["cycle_id"]}
 
