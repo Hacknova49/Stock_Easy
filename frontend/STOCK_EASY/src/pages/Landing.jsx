@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { LayoutDashboard, TrendingUp, Shield, HeadphonesIcon, BarChart3, Users, Zap, Check } from "lucide-react";
 import Squares from "../components/Squares";
 import Shuffle from "../components/Shuffle";
+import WorkflowAnimation from "../components/WorkflowAnimation";
 import "./Landing.css";
 
 function Landing() {
@@ -38,32 +39,38 @@ function Landing() {
 
       {/* Hero Section */}
       <section className="hero-section">
-        <div className="hero-title">
-          <Shuffle
-            text="STOCK EASY"
-            shuffleDirection="right"
-            duration={0.35}
-            animationMode="evenodd"
-            shuffleTimes={1}
-            ease="power3.out"
-            stagger={0.03}
-            threshold={0.1}
-            triggerOnce
-            triggerOnHover
-            respectReducedMotion
-          />
+        <div className="hero-content">
+          <div className="hero-title">
+            <Shuffle
+              text="STOCK EASY"
+              shuffleDirection="right"
+              duration={0.35}
+              animationMode="evenodd"
+              shuffleTimes={1}
+              ease="power3.out"
+              stagger={0.03}
+              threshold={0.1}
+              triggerOnce
+              triggerOnHover
+              respectReducedMotion
+            />
+          </div>
+          <p className="hero-subtitle">
+            Welcome to StockEasy — Your AI-Powered Solution for Inventory Insights and
+            Automated Payment Processing
+          </p>
+          <div className="hero-buttons">
+            <Link to="/homepage" className="btn-primary">
+              <Zap size={18} />
+              Start trial now
+            </Link>
+            <button className="btn-secondary">Demo Video →</button>
+          </div>
         </div>
-        <p className="hero-subtitle">
-          Welcome to StockEasy — Your AI-Powered Solution for Inventory Insights and
-          Automated Payment Processing
-        </p>
-        <div className="hero-buttons">
-          <Link to="/homepage" className="btn-primary">
-            <Zap size={18} />
-            Start trial now
-          </Link>
-          <button className="btn-secondary">Demo Video</button>
-        </div>
+
+
+        {/* Animated Workflow */}
+        <WorkflowAnimation />
       </section>
 
       {/* Services Section */}
@@ -210,12 +217,6 @@ function Landing() {
           <button className="newsletter-submit">
             <Zap size={18} />
           </button>
-        </div>
-        <div className="social-links">
-          <a href="#" className="social-link">📘</a>
-          <a href="#" className="social-link">📷</a>
-          <a href="#" className="social-link">🐦</a>
-          <a href="#" className="social-link">🔗</a>
         </div>
         <p className="footer-copyright">© 2026 StockEasy. All rights reserved.</p>
       </footer>
