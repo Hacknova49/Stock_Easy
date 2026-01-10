@@ -1,66 +1,185 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  RadialBarChart,
-  RadialBar,
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, AreaChart, Area
 } from "recharts";
 import {
-  PieChart as PieIcon,
-  BarChart3,
-  TrendingUp,
-  Package,
-  DollarSign,
-  Activity
+  LayoutDashboard, ShoppingCart, BarChart2, MessageSquare, Globe, Users, Settings, Bell, LogOut,
+  ChevronDown, Search, Activity, MoreHorizontal, ArrowUpRight, ArrowDownRight, Wallet, Package, Menu
 } from "lucide-react";
-import AppNavbar from "../components/AppNavbar";
 import "./Dashboard.css";
-//comment this if not deployed
+
+// API Config
 const API_BASE_URL = "https://stockeasy-backend-qi9b.onrender.com";
 
-// Chart colors
+// Theme Colors
 const COLORS = {
-  suppliers: ["#8b5cf6", "#06b6d4", "#f59e0b"],
-  priority: ["#4ade80", "#fbbf24", "#f87171"],
-  categories: ["#8b5cf6", "#06b6d4", "#f59e0b", "#4ade80", "#f87171", "#ec4899", "#84cc16", "#6366f1"],
+  primary: "#10b981", // Green
+  secondary: "#3b82f6", // Blue
+  accent: "#f59e0b", // Amber
+  danger: "#ef4444", // Red
+  purple: "#8b5cf6",
+  cyan: "#06b6d4",
+  chartColors: ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#06b6d4", "#ec4899"]
 };
+
+// --- Sub-Components ---
+
+const Sidebar = ({ isCollapsed, toggleCollapse, onNavigate }) => {
+  const navigate = useNavigate();
+  const [activeItem, setActiveItem] = useState('Analytics');
+
+  const handleNav = (label, path, sectionId) => {
+    setActiveItem(label);
+    if (path) {
+      navigate(path);
+    } else if (sectionId) {
+      onNavigate(sectionId);
+    }
+  };
+
+  return (
+    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+      <div className="sidebar-logo">
+        <div className="logo-icon" onClick={toggleCollapse} style={{ cursor: 'pointer' }}>
+          <LayoutDashboard size={20} />
+        </div>
+        {!isCollapsed && <span>Develop</span>}
+      </div>
+
+      <div className="nav-links">
+        <div
+          className={`nav-item ${activeItem === 'Home' ? 'active' : ''}`}
+          onClick={() => handleNav('Home', '/homepage')}
+          title="Home"
+        >
+          <LayoutDashboard size={20} />
+          {!isCollapsed && <span>Home</span>}
+        </div>
+
+        <div
+          className={`nav-item ${activeItem === 'Dashboard' ? 'active' : ''}`}
+          onClick={() => handleNav('Dashboard', '/dashboard')}
+          title="Dashboard"
+        >
+          <Activity size={20} />
+          {!isCollapsed && <span>Dashboard</span>}
+        </div>
+
+        {/* Wallet Removed */}
+
+        <div
+          className={`nav-item ${activeItem === 'Landing' ? 'active' : ''}`}
+          onClick={() => handleNav('Landing', '/')}
+          title="Landing Page"
+        >
+          <LogOut size={20} />
+          {!isCollapsed && <span>Landing Page</span>}
+        </div>
+      </div>
+
+
+      <div className="nav-bottom">
+        {/* Settings and Exit removed as requested */}
+      </div>
+    </aside>
+  );
+};
+
+const StatCard = ({ title, value, subtext, icon: Icon, color }) => (
+  <div className="card summary-card">
+    <div className="summary-header">
+      <span>{title}</span>
+      <MoreHorizontal size={16} />
+    </div>
+    <div>
+      <h3 className="summary-value">{value}</h3>
+    </div>
+  </div>
+);
+
+const ActiveStatusCard = ({ data }) => (
+  <div className="card summary-card active-dark" style={{ height: 'auto', minHeight: '160px' }}>
+    <div className="summary-header" style={{ marginBottom: '1rem' }}>
+      <span>System Status</span>
+      {/* View all removed */}
+    </div>
+
+    <div className="active-status-grid">
+      <div className="status-row">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }}></div>
+          <span style={{ fontSize: '0.9rem', color: '#fff' }}>AI Agent</span>
+        </div>
+        <span style={{ fontSize: '0.9rem', color: '#10b981' }}>Active</span>
+      </div>
+      <div className="status-row">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Globe size={14} color="#8b5cf6" />
+          <span style={{ fontSize: '0.9rem', color: '#fff' }}>Network</span>
+        </div>
+        <span style={{ fontSize: '0.9rem', color: '#8b5cf6' }}>Polygon Amoy</span>
+      </div>
+      <div className="status-row">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Activity size={14} color="#3b82f6" />
+          <span style={{ fontSize: '0.9rem', color: '#fff' }}>SKUs</span>
+        </div>
+        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{data?.active_skus_processed || 0}</span>
+      </div>
+    </div>
+  </div>
+);
+
+const ChartCard = ({ title, children, className, actionElement, style }) => (
+  <div className={`card ${className}`} style={style}>
+    <div className="summary-header" style={{ marginBottom: '1.5rem' }}>
+      <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'white' }}>{title}</h3>
+      {actionElement ? actionElement : (
+        <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.8rem' }}>
+          <span>Last week</span>
+          <ChevronDown size={14} />
+        </div>
+      )}
+    </div>
+    {children}
+  </div>
+);
+
+// --- Main Component ---
 
 function Dashboard() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [showAllDecisions, setShowAllDecisions] = useState(false);
+
+  // Refs for scrolling
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const fetchAgentData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      const res = await fetch(`${API_BASE_URL}/restock-items`, {
-        signal: controller.signal,
-      });
-      
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const res = await fetch(`${API_BASE_URL}/restock-items`, { signal: controller.signal });
       clearTimeout(timeoutId);
 
-      if (!res.ok) throw new Error(`Failed to fetch data: ${res.status}`);
+      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
       const json = await res.json();
       setData(json);
     } catch (err) {
-      if (err.name === 'AbortError') {
-        setError('Backend service is slow to respond. This may be due to server cold start. Try again in a few moments.');
-      } else {
-        setError(`Connection error: ${err.message}`);
+      if (err.name !== 'AbortError') {
+        setError(err.message);
       }
     } finally {
       setLoading(false);
@@ -69,42 +188,34 @@ function Dashboard() {
 
   useEffect(() => {
     fetchAgentData();
-    // Only set up polling if initial fetch succeeds
-    const setupPolling = () => {
-      const interval = setInterval(fetchAgentData, 120000); // Increased to 2 minutes
-      return () => clearInterval(interval);
-    };
-    
-    return () => {
-      // Cleanup will be handled by the polling interval
-    };
   }, [fetchAgentData]);
 
-  // Process data for charts (memoized)
+  const toggleSidebar = () => setIsSidebarCollapsed(!isSidebarCollapsed);
+
   const chartData = useMemo(() => {
     if (!data) return null;
 
-    const supplierSpendData = Object.entries(data.supplier_spend || {}).map(([key, value]) => ({
-      name: key,
-      value: value,
-      displayValue: `₹${value.toLocaleString()}`,
+    // Process data similar to before
+    const supplierData = Object.entries(data.supplier_spend || {}).map(([key, val]) => ({
+      name: key, value: val
     }));
 
-    // Category distribution
     const categoryMap = {};
-    data.decisions.forEach((d) => {
-      if (!categoryMap[d.category]) {
-        categoryMap[d.category] = { count: 0, quantity: 0, cost: 0 };
-      }
-      categoryMap[d.category].count++;
+    data.decisions.forEach(d => {
+      if (!categoryMap[d.category]) categoryMap[d.category] = { count: 0, quantity: 0 };
       categoryMap[d.category].quantity += d.restock_quantity;
-      categoryMap[d.category].cost += d.total_cost;
     });
-
     const categoryData = Object.entries(categoryMap)
-      .map(([name, { quantity }]) => ({ name: name.substring(0, 15), quantity }))
-      .sort((a, b) => b.quantity - a.quantity)
-      .slice(0, 6);
+      .map(([name, { quantity }]) => ({ name: name.substring(0, 10), quantity }))
+      .sort((a, b) => b.quantity - a.quantity).slice(0, 7);
+
+    const stockDemandData = data.decisions.slice(0, 8).map(d => ({
+      name: d.product.substring(0, 10),
+      stock: d.current_stock,
+      demand: d.predicted_7d_demand
+    }));
+
+    const budgetPercent = ((data.total_spent / data.monthly_budget) * 100).toFixed(1);
 
     // Priority distribution
     const priorityMap = { 1: 0, 2: 0, 3: 0 };
@@ -113,363 +224,223 @@ function Dashboard() {
     });
 
     const priorityData = [
-      { name: "Low (1)", value: priorityMap[1], fill: COLORS.priority[0] },
-      { name: "Medium (2)", value: priorityMap[2], fill: COLORS.priority[1] },
-      { name: "High (3)", value: priorityMap[3], fill: COLORS.priority[2] },
+      { name: "Low (1)", value: priorityMap[1], fill: COLORS.priority?.[0] || "#4ade80" }, // Fallback colors if COLORS.priority undefined
+      { name: "Medium (2)", value: priorityMap[2], fill: COLORS.priority?.[1] || "#fbbf24" },
+      { name: "High (3)", value: priorityMap[3], fill: COLORS.priority?.[2] || "#f87171" },
     ];
 
-    // Stock vs Demand comparison (top 8)
-    const stockDemandData = data.decisions
-      .slice(0, 8)
-      .map((d) => ({
-        name: d.product.substring(0, 12),
-        stock: d.current_stock,
-        demand: d.predicted_7d_demand,
-      }));
-
-    // Budget percentage
-    const budgetPercentage = ((data.total_spent / data.monthly_budget) * 100).toFixed(1);
-
-    return {
-      supplierSpendData,
-      categoryData,
-      priorityData,
-      stockDemandData,
-      budgetPercentage
-    };
+    return { supplierData, categoryData, stockDemandData, budgetPercent, priorityData };
   }, [data]);
-
-  // Priority label helper
-  const getPriorityLabel = (priority) => {
-    switch (priority) {
-      case 3: return { label: "HIGH", class: "high" };
-      case 2: return { label: "MEDIUM", class: "medium" };
-      default: return { label: "LOW", class: "low" };
-    }
-  };
-
-  // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="custom-tooltip">
-          <p className="tooltip-label">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} className="tooltip-value" style={{ color: entry.color }}>
-              {entry.name}: {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  if (error) {
-    return (
-      <div className="error-container">
-        <div className="error-icon">❌</div>
-        <p className="error-text">{error}</p>
-        <div className="error-actions">
-          <button onClick={fetchAgentData} className="retry-button" disabled={loading}>
-            {loading ? 'Retrying...' : 'Retry'}
-          </button>
-          <button onClick={() => window.location.reload()} className="refresh-button">
-            Refresh Page
-          </button>
-        </div>
-        <div className="error-tips">
-          <p className="error-tip">💡 Tips:</p>
-          <ul className="error-tip-list">
-            <li>The backend may be starting up (cold start)</li>
-            <li>Check your internet connection</li>
-            <li>Try refreshing the page</li>
-          </ul>
-        </div>
-      </div>
-    );
-  }
-
-  // Debug fallback - ensure something always renders
-  if (loading && !data) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p className="loading-text">Loading AI Agent Data...</p>
-        <p className="loading-subtitle">Connecting to backend service...</p>
-        <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}>
-          <p style={{ color: '#fbbf24', fontSize: '0.9rem' }}>Debug: Loading state active</p>
-        </div>
-      </div>
-    );
-  }
 
   if (loading || !data) {
     return (
-      <div className="loading-container">
+      <div className="dashboard-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <div className="loading-spinner"></div>
-        <p className="loading-text">Loading AI Agent Data...</p>
-        <p className="loading-subtitle">Connecting to backend service...</p>
       </div>
     );
   }
 
   return (
-    <div className="dashboard-page">
-      <AppNavbar />
+    <div className="dashboard-container">
+      <Sidebar
+        isCollapsed={isSidebarCollapsed}
+        toggleCollapse={toggleSidebar}
+        onNavigate={scrollToSection}
+      />
 
-      <div style={{ paddingTop: "80px" }}>
+      <main className={`main-content ${isSidebarCollapsed ? 'expanded' : ''}`}>
         {/* Header */}
-        <div className="dashboard-header">
-          <h1 className="dashboard-title">Live Agent Dashboard</h1>
-          <p className="dashboard-subtitle">
-            AI-powered inventory management • Cycle: {data.cycle_id?.substring(0, 10)}
-          </p>
-        </div>
-
-        {/* Status Cards */}
-        <div className="status-grid">
-          <div className="status-card">
-            <p className="status-label">AI Agent</p>
-            <p className="status-value">ACTIVE</p>
-          </div>
-          <div className="status-card">
-            <p className="status-label">Session Key</p>
-            <p className="status-value">ACTIVE</p>
-          </div>
-          <div className="status-card">
-            <p className="status-label">Network</p>
-            <p className="status-value">Polygon Amoy</p>
-          </div>
-          <div className="status-card">
-            <p className="status-label">SKUs Processed</p>
-            <p className="status-value">{data.active_skus_processed}</p>
-          </div>
-        </div>
-
-        {/* Budget Overview */}
-        <div className="budget-card">
-          <div className="budget-header">
-            <h2 className="budget-title">
-              <DollarSign size={20} style={{ color: "#4ade80" }} />
-              Budget Overview
-            </h2>
-            <span className="budget-period">Monthly Cycle</span>
+        <header className="top-header">
+          <div className="welcome-text">
+            <h1>Hello, Admin welcome back</h1>
+            <p>Here is your inventory overview for today</p>
           </div>
 
-          <div className="budget-stats">
-            <div className="budget-stat">
-              <p className="budget-stat-label">Total Budget</p>
-              <p className="budget-stat-value total">₹{data.monthly_budget?.toLocaleString()}</p>
-            </div>
-            <div className="budget-stat">
-              <p className="budget-stat-label">Total Spent</p>
-              <p className="budget-stat-value spent">₹{data.total_spent?.toLocaleString()}</p>
-            </div>
-            <div className="budget-stat">
-              <p className="budget-stat-label">Remaining</p>
-              <p className="budget-stat-value remaining">₹{data.budget_remaining?.toLocaleString()}</p>
+          <div className="header-actions">
+            {/* Search Bar Removed */}
+            <div className="user-profile">
+              <div className="user-avatar"></div>
+              <span>Admin User</span>
             </div>
           </div>
+        </header>
 
-          <div className="budget-progress-container">
-            <div className="budget-progress-label">
-              <span>Budget Utilization</span>
-              <span>{chartData.budgetPercentage}%</span>
-            </div>
-            <div className="budget-progress-bar">
-              <div
-                className={`budget-progress-fill ${chartData.budgetPercentage > 90 ? "danger" : chartData.budgetPercentage > 70 ? "warning" : ""
-                  }`}
-                style={{ width: `${Math.min(chartData.budgetPercentage, 100)}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
+        <div className="dashboard-grid">
 
-        {/* Charts Grid */}
-        <div className="charts-grid">
-          {/* Supplier Spend Pie Chart */}
-          <div className="chart-card">
-            <h3 className="chart-title">
-              <PieIcon size={18} className="chart-icon" />
-              Supplier Spend Distribution
-            </h3>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData.supplierSpendData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, displayValue }) => `${name}: ${displayValue}`}
-                    labelLine={{ stroke: "#8080a0" }}
-                  >
-                    {chartData.supplierSpendData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS.suppliers[index % COLORS.suppliers.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value) => [`₹${value.toLocaleString()}`, "Spent"]}
-                    contentStyle={{
-                      background: "rgba(20, 20, 50, 0.95)",
-                      border: "1px solid rgba(138, 100, 255, 0.3)",
-                      borderRadius: "8px",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+          {/* Row 1: Summary Stats (Wallet Section) */}
+          <div id="wallet-section" style={{ display: 'contents' }}>
+            <StatCard
+              title="Total Budget"
+              value={`₹${data.monthly_budget?.toLocaleString()}`}
+            />
+            <StatCard
+              title="Total Spent"
+              value={`₹${data.total_spent?.toLocaleString()}`}
+            />
+            <StatCard
+              title="Remaining"
+              value={`₹${data.budget_remaining?.toLocaleString()}`}
+            />
+            <ActiveStatusCard data={data} />
           </div>
 
-          {/* Priority Distribution */}
-          <div className="chart-card">
-            <h3 className="chart-title">
-              <Activity size={18} className="chart-icon" />
-              Priority Distribution
-            </h3>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData.priorityData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
-                    labelLine={{ stroke: "#8080a0" }}
-                  >
-                    {chartData.priorityData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value) => [value, "Items"]}
-                    contentStyle={{
-                      background: "rgba(20, 20, 50, 0.95)",
-                      border: "1px solid rgba(138, 100, 255, 0.3)",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          {/* Row 2: Charts Middle (Analytics Section) */}
+          <div id="analytics-section" style={{ display: 'contents' }}>
+            {/* Main Bar Chart (Category Restock) */}
+            <ChartCard title="Restock by Category (Quantity)" className="chart-section-large">
+              <div style={{ flex: 1, minHeight: '500px', width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData.categoryData} barSize={40}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }}
+                      itemStyle={{ color: '#fff' }}
+                      cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                    />
+                    <Bar dataKey="quantity" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
 
-          {/* Category Bar Chart */}
-          <div className="chart-card">
-            <h3 className="chart-title">
-              <BarChart3 size={18} className="chart-icon" />
-              Restock by Category
-            </h3>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData.categoryData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(100, 100, 180, 0.2)" />
-                  <XAxis type="number" stroke="#8080a0" />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    stroke="#8080a0"
-                    tick={{ fontSize: 11 }}
-                    width={100}
-                  />
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    cursor={{ fill: "rgba(138, 100, 255, 0.1)" }}
-                  />
-                  <Bar dataKey="quantity" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Stock vs Demand */}
-          <div className="chart-card">
-            <h3 className="chart-title">
-              <TrendingUp size={18} className="chart-icon" />
-              Stock vs 7-Day Demand
-            </h3>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData.stockDemandData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(100, 100, 180, 0.2)" />
-                  <XAxis dataKey="name" stroke="#8080a0" tick={{ fontSize: 10 }} />
-                  <YAxis stroke="#8080a0" />
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    cursor={{ fill: "rgba(138, 100, 255, 0.1)" }}
-                  />
-                  <Legend />
-                  <Bar dataKey="stock" name="Current Stock" fill="#06b6d4" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="demand" name="Predicted Demand" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* Decisions Section */}
-        <div className="decisions-section">
-          <h2 className="decisions-title">
-            <Package size={24} style={{ marginRight: "0.5rem", color: "#a0a0ff" }} />
-            AI Restock Decisions ({data.decisions.length} items)
-          </h2>
-
-          <div className="decisions-grid">
-            {data.decisions.slice(0, 6).map((d, index) => {
-              const priority = getPriorityLabel(d.priority);
-              return (
-                <div key={index} className="decision-card">
-                  <div className="decision-header">
-                    <h3 className="decision-product">{d.product}</h3>
-                    <span className={`decision-priority ${priority.class}`}>{priority.label}</span>
+            {/* Right Col: Pie Chart & Priority */}
+            <div className="side-charts-col">
+              <ChartCard title="Supplier Spend" className="small-chart-card" actionElement={<></>}>
+                <div style={{ height: '200px', position: 'relative' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData.supplierData}
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {chartData.supplierData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS.chartColors[index % COLORS.chartColors.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderRadius: '8px', border: 'none' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {/* Center text overlay */}
+                  <div style={{
+                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                    textAlign: 'center'
+                  }}>
+                    <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>Total</span>
+                    <div style={{ fontWeight: 'bold', color: 'white' }}>100%</div>
                   </div>
-
-                  <div className="decision-details">
-                    <div className="decision-detail">
-                      <span className="decision-detail-label">Supplier</span>
-                      <span className="decision-detail-value">{d.supplier_id}</span>
-                    </div>
-                    <div className="decision-detail">
-                      <span className="decision-detail-label">Category</span>
-                      <span className="decision-detail-value">{d.category}</span>
-                    </div>
-                    <div className="decision-detail">
-                      <span className="decision-detail-label">Current Stock</span>
-                      <span className="decision-detail-value">{d.current_stock} units</span>
-                    </div>
-                    <div className="decision-detail">
-                      <span className="decision-detail-label">7-Day Demand</span>
-                      <span className="decision-detail-value">{d.predicted_7d_demand} units</span>
-                    </div>
-                    <div className="decision-detail">
-                      <span className="decision-detail-label">Restock Qty</span>
-                      <span className="decision-detail-value highlight">{d.restock_quantity} units</span>
-                    </div>
-                    <div className="decision-detail">
-                      <span className="decision-detail-label">Total Cost</span>
-                      <span className="decision-detail-value highlight">₹{d.total_cost.toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  <p className="decision-reason">{d.reason}</p>
-
                 </div>
-              );
-            })}
+              </ChartCard>
+
+              {/* Priority Distribution Chart */}
+              <ChartCard title="Priority Distribution" className="small-chart-card" actionElement={<></>} style={{ minHeight: '380px' }}>
+                <div style={{ height: '200px', width: '100%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData.priorityData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {chartData.priorityData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderRadius: '8px', border: 'none' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                {/* Legend list */}
+                <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {chartData.priorityData.map((entry, index) => (
+                    <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: entry.fill }}></div>
+                        <span style={{ color: "#9ca3af" }}>{entry.name}</span>
+                      </div>
+                      <span style={{ color: "white" }}>{entry.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </ChartCard>
+            </div>
           </div>
+
+          {/* Row 3: Bottom Section */}
+
+          {/* Decisions List */}
+          <ChartCard
+            title="Recent Decisions"
+            className="bottom-section-wide"
+            actionElement={
+              <div
+                style={{ display: 'flex', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer', color: '#10b981' }}
+                onClick={() => setShowAllDecisions(!showAllDecisions)}
+              >
+                <span>{showAllDecisions ? 'Show less' : 'View all'}</span>
+                <ChevronDown size={14} style={{ transform: showAllDecisions ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </div>
+            }
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', maxHeight: showAllDecisions ? '400px' : 'auto', overflowY: showAllDecisions ? 'auto' : 'hidden' }}>
+              {data.decisions.slice(0, showAllDecisions ? undefined : 4).map((d, i) => (
+                <div key={i} className="transaction-item">
+                  <div className="t-icon">
+                    <Package size={20} color={COLORS.chartColors[i % 4]} />
+                  </div>
+                  <div className="t-info">
+                    <span className="t-name">{d.product}</span>
+                    <span className="t-date">{d.supplier_id} • Priority: {d.priority}</span>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span className="t-amount" style={{ color: '#ef4444' }}>-₹{d.total_cost.toLocaleString()}</span>
+                    <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>{d.restock_quantity} units</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ChartCard>
+
+          {/* Stock vs Demand (Wave/Area Chart style) */}
+          <ChartCard title="Stock vs 7-Day Demand" className="bottom-side-col" actionElement={<></>}>
+
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={chartData.stockDemandData}>
+                <defs>
+                  <linearGradient id="colorStock" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorDemand" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ec4899" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none' }} />
+                <Area type="monotone" dataKey="stock" stroke="#3b82f6" fillOpacity={1} fill="url(#colorStock)" />
+                <Area type="monotone" dataKey="demand" stroke="#ec4899" fillOpacity={1} fill="url(#colorDemand)" />
+              </AreaChart>
+            </ResponsiveContainer>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#9ca3af' }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6' }}></div> Current Stock
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#9ca3af' }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ec4899' }}></div> Demand
+              </div>
+            </div>
+          </ChartCard>
+
         </div>
-      </div>
+      </main>
     </div>
   );
 }
