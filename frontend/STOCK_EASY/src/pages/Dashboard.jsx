@@ -48,16 +48,8 @@ const Sidebar = ({ isCollapsed, toggleCollapse, onNavigate }) => {
         {!isCollapsed && <span>Develop</span>}
       </div>
 
-      <div className="nav-links">
-        <div
-          className={`nav-item ${activeItem === 'Home' ? 'active' : ''}`}
-          onClick={() => handleNav('Home', '/homepage')}
-          title="Home"
-        >
-          <LayoutDashboard size={20} />
-          {!isCollapsed && <span>Home</span>}
-        </div>
 
+      <div className="nav-links">
         <div
           className={`nav-item ${activeItem === 'Dashboard' ? 'active' : ''}`}
           onClick={() => handleNav('Dashboard', '/dashboard')}
@@ -74,8 +66,17 @@ const Sidebar = ({ isCollapsed, toggleCollapse, onNavigate }) => {
           onClick={() => handleNav('Landing', '/')}
           title="Landing Page"
         >
-          <LogOut size={20} />
+          <Globe size={20} />
           {!isCollapsed && <span>Landing Page</span>}
+        </div>
+
+        <div
+          className={`nav-item ${activeItem === 'Control Panel' ? 'active' : ''}`}
+          onClick={() => handleNav('Control Panel', '/control-panel')}
+          title="Control Panel"
+        >
+          <Settings size={20} />
+          {!isCollapsed && <span>Control Panel</span>}
         </div>
       </div>
 
@@ -99,21 +100,13 @@ const StatCard = ({ title, value, subtext, icon: Icon, color }) => (
   </div>
 );
 
-const ActiveStatusCard = ({ data }) => (
-  <div className="card summary-card active-dark" style={{ height: 'auto', minHeight: '160px' }}>
-    <div className="summary-header" style={{ marginBottom: '1rem' }}>
-      <span>System Status</span>
-      {/* View all removed */}
+const ActiveStatusCard = ({ data, config }) => (
+  <div className="card summary-card">
+    <div className="summary-header">
+      <span>Active Status</span>
+      <MoreHorizontal size={16} />
     </div>
-
-    <div className="active-status-grid">
-      <div className="status-row">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }}></div>
-          <span style={{ fontSize: '0.9rem', color: '#fff' }}>AI Agent</span>
-        </div>
-        <span style={{ fontSize: '0.9rem', color: '#10b981' }}>Active</span>
-      </div>
+    <div>
       <div className="status-row">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Globe size={14} color="#8b5cf6" />
@@ -128,6 +121,24 @@ const ActiveStatusCard = ({ data }) => (
         </div>
         <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{data?.active_skus_processed || 0}</span>
       </div>
+      {config && (
+        <>
+          <div className="status-row">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Package size={14} color="#10b981" />
+              <span style={{ fontSize: '0.9rem', color: '#fff' }}>Buffer Stock</span>
+            </div>
+            <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{config.bufferStock} days</span>
+          </div>
+          <div className="status-row">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Activity size={14} color="#f59e0b" />
+              <span style={{ fontSize: '0.9rem', color: '#fff' }}>Min Demand</span>
+            </div>
+            <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{config.minDemand} units</span>
+          </div>
+        </>
+      )}
     </div>
   </div>
 );
@@ -151,6 +162,7 @@ const ChartCard = ({ title, children, className, actionElement, style }) => (
 
 function Dashboard() {
   const [data, setData] = useState(null);
+  const [config, setConfig] = useState(null); // Add config state
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
@@ -163,6 +175,21 @@ function Dashboard() {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
+
+  // Fetch configuration from Control Panel
+  const fetchConfig = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/agent/config`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.config) {
+          setConfig(json.config);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not fetch config:", err);
+    }
+  }, []);
 
   const fetchAgentData = useCallback(async () => {
     try {
@@ -188,7 +215,8 @@ function Dashboard() {
 
   useEffect(() => {
     fetchAgentData();
-  }, [fetchAgentData]);
+    fetchConfig(); // Also fetch config on mount
+  }, [fetchAgentData, fetchConfig]);
 
   const toggleSidebar = () => setIsSidebarCollapsed(!isSidebarCollapsed);
 
@@ -252,16 +280,13 @@ function Dashboard() {
         {/* Header */}
         <header className="top-header">
           <div className="welcome-text">
-            <h1>Hello, Admin welcome back</h1>
+            <h1>Welcome back</h1>
             <p>Here is your inventory overview for today</p>
           </div>
 
           <div className="header-actions">
             {/* Search Bar Removed */}
-            <div className="user-profile">
-              <div className="user-avatar"></div>
-              <span>Admin User</span>
-            </div>
+            {/* User Profile Removed */}
           </div>
         </header>
 
@@ -271,17 +296,17 @@ function Dashboard() {
           <div id="wallet-section" style={{ display: 'contents' }}>
             <StatCard
               title="Total Budget"
-              value={`₹${data.monthly_budget?.toLocaleString()}`}
+              value={`₹${(config?.monthlyBudget || data.monthly_budget || 0).toLocaleString()}`}
             />
             <StatCard
               title="Total Spent"
-              value={`₹${data.total_spent?.toLocaleString()}`}
+              value={`₹${(data.total_spent || 0).toLocaleString()}`}
             />
             <StatCard
               title="Remaining"
-              value={`₹${data.budget_remaining?.toLocaleString()}`}
+              value={`₹${((config?.monthlyBudget || data.monthly_budget || 0) - (data.total_spent || 0)).toLocaleString()}`}
             />
-            <ActiveStatusCard data={data} />
+            <ActiveStatusCard data={data} config={config} />
           </div>
 
           {/* Row 2: Charts Middle (Analytics Section) */}
