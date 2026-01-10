@@ -61,7 +61,8 @@
     gap: 2.5rem;
 }
 
-.nav-link {
+/* Old classes removed or replaced by .landing-nav-link */
+.landing-nav-link {
     color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
     font-size: 0.9rem;
@@ -69,7 +70,7 @@
     transition: color 0.3s ease;
 }
 
-.nav-link:hover {
+.landing-nav-link:hover {
     color: #ffffff;
 }
 
@@ -1007,13 +1008,10 @@
 
 .mobile-nav-link.highlight {
     color: #22c55e;
-    font-size: 1.75rem;
 }
 
 /* Ensure Nav Links are Flex on Desktop */
-/* Ensure Nav Links are Flex on Desktop */
-/* Ensure Nav Links are Flex on Desktop */
-.nav-links {
+.landing-nav-links {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
@@ -1026,12 +1024,21 @@
 }
 
 /* Nav Link Animation */
-.nav-link {
+.landing-nav-link {
     position: relative;
     padding: 0.5rem 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: color 0.3s ease;
 }
 
-.nav-link::after {
+.landing-nav-link:hover {
+    color: #ffffff;
+}
+
+.landing-nav-link::after {
     content: '';
     position: absolute;
     bottom: 0;
@@ -1042,11 +1049,26 @@
     transition: width 0.3s ease;
 }
 
-.nav-link:hover::after {
+.landing-nav-link:hover::after {
     width: 100%;
 }
 
-/* Wide Screen Optimization (1600px+) */
+.landing-nav-cta {
+    background: #22c55e;
+    color: #000000;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.6rem 1.25rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.landing-nav-cta:hover {
+    background: #16a34a;
+    transform: translateY(-1px);
+}
+
 /* Wide Screen Optimization (1600px+) */
 @media (min-width: 1600px) {
     .landing-nav {
@@ -1059,13 +1081,12 @@
         /* Bigger brand */
     }
 
-    .nav-link {
+    .landing-nav-link {
         font-size: 1.1rem;
         /* Bigger links */
     }
 
-    .nav-cta,
-    .nav-signin {
+    .landing-nav-cta {
         font-size: 1.1rem;
         padding: 0.75rem 1.5rem;
     }
@@ -1121,8 +1142,8 @@
 
 /* Mobile & Tablets */
 @media (max-width: 1024px) {
-    .nav-links {
-        display: none;
+    .landing-nav-links {
+        display: none !important;
         /* Hide desktop links */
     }
 
@@ -1135,8 +1156,7 @@
         gap: 0.5rem;
     }
 
-    .nav-cta,
-    .nav-signin {
+    .landing-nav-cta {
         display: none;
         /* Hide extra buttons */
     }

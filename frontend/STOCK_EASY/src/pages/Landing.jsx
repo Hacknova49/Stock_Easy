@@ -33,17 +33,18 @@ function Landing() {
         </div>
 
         {/* Desktop Links */}
-        <div className="nav-links">
-          <a href="#features" className="nav-link">Features</a>
-          <a href="#pricing" className="nav-link">Pricing</a>
-          <a href="#about" className="nav-link">About</a>
-          <Link to="/dashboard" className="nav-link">Dashboard</Link>
-          <Link to="/control-panel" className="nav-link">Control Panel</Link>
+        {/* Desktop Navigation - Centered */}
+        <div className="landing-nav-links">
+          <a href="#features" className="landing-nav-link">Features</a>
+          <a href="#pricing" className="landing-nav-link">Pricing</a>
+          <a href="#about" className="landing-nav-link">About</a>
+          <Link to="/dashboard" className="landing-nav-link">Dashboard</Link>
+          <Link to="/control-panel" className="landing-nav-link">Control Panel</Link>
         </div>
 
         <div className="nav-actions">
-          <Link to="/homepage" className="nav-signin">Sign In</Link>
-          <Link to="/homepage" className="nav-cta">Get Started</Link>
+          {/* Sign In Removed */}
+          <Link to="/control-panel" className="landing-nav-cta">Get Started</Link>
 
           {/* Mobile Menu Toggle */}
           <button className="mobile-menu-btn" onClick={toggleMenu} aria-label="Toggle menu">
@@ -235,7 +236,6 @@ function Landing() {
       {/* Newsletter Footer */}
       <footer className="landing-footer">
         <div className="footer-brand">
-          <img src="/src/assets/stock easy photo.png" alt="StockEasy" className="brand-logo" />
           <span className="brand-name">StockEasy</span>
         </div>
         <h3 className="footer-title">Sign up for the StockEasy Newsletter</h3>
