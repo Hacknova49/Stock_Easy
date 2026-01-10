@@ -92,7 +92,7 @@ function Landing() {
               <Zap size={18} />
               Start trial now
             </Link>
-            <button className="btn-secondary">Demo Video →</button>
+            <a href="https://drive.google.com/file/d/10bZdTYxfNd5ZLhjChRADZy-OaPW0dlhX/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="btn-secondary">Demo Video →</a>
           </div>
         </div>
 
