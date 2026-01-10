@@ -1,16 +1,14 @@
-/* Dashboard Layout & Theme */
+/* Dashboard Layout & Theme - Dark Green Theme (matching Control Panel) */
 :root {
-    --bg-dark: #0f1014;
-    --bg-card: #191b24;
-    --bg-sidebar: #0f1014;
+    --bg-dark: #071207;
+    --bg-card: rgba(16, 32, 20, 0.9);
+    --bg-sidebar: #071207;
     --text-primary: #ffffff;
     --text-secondary: #9ca3af;
-    --accent-green: #d1fae5;
-    /* Very light green for subtle backgrounds */
-    --accent-green-bright: #10b981;
-    /* Primary Green */
-    --accent-green-glow: rgba(16, 185, 129, 0.4);
-    --border-color: #2d313e;
+    --accent-green: #4ade80;
+    --accent-green-bright: #4ade80;
+    --accent-green-glow: rgba(74, 222, 128, 0.5);
+    --border-color: rgba(74, 222, 128, 0.15);
 }
 
 body {
@@ -21,9 +19,20 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background-color: var(--bg-dark);
+    background: linear-gradient(135deg, #05100a 0%, #0a1a10 50%, #05100a 100%);
     color: var(--text-primary);
     font-family: 'Inter', sans-serif;
+    position: relative;
+}
+
+/* Green glow overlay */
+.dashboard-container::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(74, 222, 128, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 /* ========== TOP NAVBAR ========== */
@@ -32,8 +41,8 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 1rem 2rem;
-    background: rgba(15, 16, 20, 0.95);
-    border-bottom: 1px solid rgba(16, 185, 129, 0.1);
+    background: rgba(8, 20, 12, 0.95);
+    border-bottom: 1px solid rgba(74, 222, 128, 0.15);
     backdrop-filter: blur(10px);
     position: sticky;
     top: 0;
@@ -118,7 +127,7 @@ body {
     left: 0;
     width: 100%;
     height: 100vh;
-    background: rgba(15, 16, 20, 0.98);
+    background: rgba(10, 18, 12, 0.98);
     backdrop-filter: blur(20px);
     z-index: 99;
     display: flex;
@@ -372,24 +381,14 @@ body {
     }
 
     100% {
-        box-shadow: 0 0 5px rgba(16, 185, 129, 0.2);
+        box-shadow: 0 0 5px rgba(74, 222, 128, 0.2);
     }
-}
-
-.dashboard-container {
-    display: flex;
-    min-height: 100vh;
-    background-color: var(--bg-dark);
-    color: var(--text-primary);
-    font-family: 'Inter', sans-serif;
-    /* subtle green tint in background */
-    background-image: radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.03) 0%, transparent 20%);
 }
 
 /* Cards */
 .card {
     background-color: var(--bg-card);
-    border-radius: 20px;
+    border-radius: 16px;
     padding: 1.5rem;
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
@@ -397,6 +396,7 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
+    backdrop-filter: blur(10px);
 }
 
 /* Stagger animations */
@@ -434,7 +434,7 @@ body {
 
 .card:hover {
     border-color: var(--accent-green-bright);
-    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.15);
+    box-shadow: 0 8px 30px rgba(74, 222, 128, 0.15);
     transform: translateY(-2px);
 }
 
