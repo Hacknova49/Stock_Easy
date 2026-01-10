@@ -1,48 +1,53 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
-    ArrowLeft,
+    LayoutDashboard,
     Wallet,
-    Brain,
+    BarChart3,
     Users,
-    Shield,
+    MessageSquare,
+    Settings,
+    HelpCircle,
+    Search,
     Bell,
     Save,
     Pencil,
     Check,
-    Sliders,
-    PieChart
+    TrendingUp,
+    TrendingDown,
+    Package,
+    AlertTriangle,
+    Activity,
+    ChevronRight,
+    ChevronLeft,
+    MoreVertical,
+    Zap,
+    Home,
+    PanelLeftClose,
+    PanelLeft
 } from "lucide-react";
 import "./controlPanel.css";
-//const API_BASE_URL = "http://localhost:8000"; use this if not ddeployed
+
 const API_BASE_URL = "https://stockeasy-backend-qi9b.onrender.com";
 
-// Default configuration (matching ai/default_config.py structure)
+// Default configuration
 const defaultConfig = {
     monthlyBudget: 500000,
     monthlyUsed: 18420,
     monthlyTotal: 500000,
-
     bufferStock: 7,
-    minDemand: 5, // matches min_demand_threshold in default_config.py
-
-    // Restock run budget limit (% of monthly budget)
+    minDemand: 5,
     restockBudgetLimit: 25,
-
-    // Priority budget split (% allocation)
     prioritySplit: {
         high: 50,
         medium: 30,
         low: 20,
     },
-
     suppliers: [
-        { id: "SUP1", address: "0x4C2c3EcB63647E34Bd473A1DEc2708D365806Ed2", status: "Allowed", allocation: 100 },
-        { id: "SUP2", address: "0x4C2c3EcB63647E34Bd473A1DEc2708D365806Ed2", status: "Allowed", allocation: 100 },
-        { id: "SUP3", address: "0x4C2c3EcB63647E34Bd473A1DEc2708D365806Ed2", status: "Allowed", allocation: 100 },
+        { id: "SUP1", name: "TechSupply Co.", address: "0x4C2c...6Ed2", status: "Allowed", allocation: 30 },
+        { id: "SUP2", name: "GlobalParts Ltd.", address: "0x7B3d...9Af1", status: "Allowed", allocation: 40 },
+        { id: "SUP3", name: "FastStock Inc.", address: "0x2E8f...4Cd3", status: "Allowed", allocation: 30 },
     ],
-
-    // Matches supplier_budget_split in default_config.py
     supplierBudgetSplit: {
         SUP1: 30,
         SUP2: 40,
@@ -50,22 +55,35 @@ const defaultConfig = {
     },
 };
 
+// Mock notifications data
+const mockNotifications = [
+    { id: 1, type: "success", message: "Budget updated successfully", time: "Just now" },
+    { id: 2, type: "warning", message: "Low stock alert: 5 items", time: "5 mins ago" },
+    { id: 3, type: "info", message: "AI restock completed", time: "1 hour ago" },
+    { id: 4, type: "success", message: "Supplier SUP2 verified", time: "3 hours ago" },
+];
+
+// Mock activities data
+const mockActivities = [
+    { id: 1, action: "Budget limit changed", detail: "25% → 30%", time: "Just now", icon: "settings" },
+    { id: 2, action: "177 Products restocked", detail: "Via AI agent", time: "17 mins ago", icon: "package" },
+    { id: 3, action: "11 Products archived", detail: "Low demand", time: "1 Day ago", icon: "archive" },
+    { id: 4, action: "Supplier removed", detail: "SUP4 revoked", time: "Feb 2, 2024", icon: "user" },
+];
+
 function ControlPanel() {
     const [config, setConfig] = useState(defaultConfig);
     const [editingSupplier, setEditingSupplier] = useState(null);
+
     useEffect(() => {
         async function loadConfig() {
             try {
                 const res = await fetch(`${API_BASE_URL}/api/agent/config`);
                 const data = await res.json();
-
-                // Backend returns { has_config, config }
                 if (data?.config) {
-                    // Deep merge with defaults to ensure all required properties exist
                     setConfig({
                         ...defaultConfig,
                         ...data.config,
-                        // Ensure nested objects are properly merged with defaults
                         prioritySplit: {
                             ...defaultConfig.prioritySplit,
                             ...(data.config.prioritySplit || {})
@@ -81,28 +99,12 @@ function ControlPanel() {
                 console.warn("No saved config found");
             }
         }
-
         loadConfig();
     }, []);
 
     const handleNumberInput = (field, value) => {
         const numValue = parseInt(value) || 0;
         setConfig({ ...config, [field]: numValue });
-    };
-
-    const handleSensitivityChange = (level) => {
-        setConfig({ ...config, demandSensitivity: level });
-    };
-
-    const handleToggle = (field) => {
-        setConfig({ ...config, [field]: !config[field] });
-    };
-
-    const handleAlertToggle = (alertType) => {
-        setConfig({
-            ...config,
-            alerts: { ...config.alerts, [alertType]: !config.alerts[alertType] }
-        });
     };
 
     const toggleSupplierStatus = (supplierId) => {
@@ -114,24 +116,53 @@ function ControlPanel() {
         setConfig({ ...config, suppliers: updatedSuppliers });
     };
 
-    const handleSupplierAddressChange = (supplierId, newAddress) => {
+    const handleSupplierAddressChange = (supplierId, value) => {
         const updatedSuppliers = config.suppliers.map(s =>
-            s.id === supplierId
-                ? { ...s, address: newAddress }
-                : s
+            s.id === supplierId ? { ...s, address: value } : s
         );
-        setConfig({ ...config, suppliers: updatedSuppliers });
+        setConfig({
+            ...config,
+            suppliers: updatedSuppliers
+        });
     };
 
     const toggleEditSupplier = (supplierId) => {
         setEditingSupplier(editingSupplier === supplierId ? null : supplierId);
     };
 
-    const handleBudgetSplitChange = (supplierId, value) => {
-        const numValue = parseInt(value) || 0;
+    const handleSupplierAllocationChange = (supplierId, value) => {
+        const numValue = Math.max(0, Math.min(100, parseInt(value) || 0));
+        const otherSuppliersTotal = config.suppliers
+            .filter(s => s.id !== supplierId)
+            .reduce((sum, s) => sum + s.allocation, 0);
+
+        // Ensure total doesn't exceed 100%
+        const maxAllowedValue = 100 - otherSuppliersTotal;
+        const finalValue = Math.min(numValue, maxAllowedValue);
+
+        const updatedSuppliers = config.suppliers.map(s =>
+            s.id === supplierId ? { ...s, allocation: finalValue } : s
+        );
         setConfig({
             ...config,
-            supplierBudgetSplit: { ...config.supplierBudgetSplit, [supplierId]: numValue }
+            suppliers: updatedSuppliers,
+            supplierBudgetSplit: { ...config.supplierBudgetSplit, [supplierId]: finalValue }
+        });
+    };
+
+    const handlePrioritySplitChange = (priority, value) => {
+        const numValue = Math.max(0, Math.min(100, parseInt(value) || 0));
+        const otherPrioritiesTotal = Object.entries(config.prioritySplit)
+            .filter(([key]) => key !== priority)
+            .reduce((sum, [, val]) => sum + val, 0);
+
+        // Ensure total doesn't exceed 100%
+        const maxAllowedValue = 100 - otherPrioritiesTotal;
+        const finalValue = Math.min(numValue, maxAllowedValue);
+
+        setConfig({
+            ...config,
+            prioritySplit: { ...config.prioritySplit, [priority]: finalValue }
         });
     };
 
@@ -140,27 +171,14 @@ function ControlPanel() {
         setConfig({ ...config, restockBudgetLimit: Math.min(100, Math.max(0, numValue)) });
     };
 
-    const handlePrioritySplitChange = (priority, value) => {
-        const numValue = parseInt(value) || 0;
-        setConfig({
-            ...config,
-            prioritySplit: { ...config.prioritySplit, [priority]: numValue }
-        });
-    };
     const saveConfigToBackend = async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/api/agent/config`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(config)
             });
-
-            if (!res.ok) {
-                throw new Error("Failed to save config");
-            }
-
+            if (!res.ok) throw new Error("Failed to save config");
             alert("Configuration saved successfully");
         } catch (err) {
             console.error(err);
@@ -169,310 +187,388 @@ function ControlPanel() {
     };
 
     const usagePercentage = config.monthlyBudget > 0
-        ? ((config.monthlyUsed / config.monthlyBudget) * 100).toFixed(0)
+        ? ((config.monthlyUsed / config.monthlyBudget) * 100).toFixed(1)
         : 0;
 
+    const quarterlyGoal = 71; // Mock quarterly goal percentage
+    const activeSuppliers = config.suppliers.filter(s => s.status === "Allowed").length;
+
     return (
-        <div className="control-panel-page">
-            {/* Header */}
-            <div className="cp-header">
-                <Link to="/homepage" className="back-button">
-                    <ArrowLeft size={18} />
-                    <span>Back to Home</span>
-                </Link>
-                <div className="cp-title-section">
-                    <h1 className="cp-title">Control Panel</h1>
-                    <p className="cp-subtitle">Configure how the AI manages stock & spending.</p>
-                </div>
-            </div>
-
-            {/* Main Content Grid */}
-            <div className="cp-grid">
-                {/* Budget & Spending Limits */}
-                <div className="cp-card">
-                    <h2 className="cp-card-title">
-                        <Wallet size={20} className="card-icon gold" />
-                        Budget & Spending Limits
-                    </h2>
-
-                    <div className="cp-form-row">
-                        <label>Monthly Budget:</label>
-                        <div className="cp-number-input">
-                            <span className="currency-prefix">₹</span>
-                            <input
-                                type="number"
-                                value={config.monthlyBudget}
-                                onChange={(e) => handleNumberInput('monthlyBudget', e.target.value)}
-                                min="0"
-                            />
-                        </div>
+        <div className="cp-dashboard">
+            {/* Main Content */}
+            <main className="cp-main">
+                <header className="main-header">
+                    <div className="breadcrumb">
+                        <span>Dashboards</span>
+                        <ChevronRight size={14} />
+                        <span className="current">Control Panel</span>
                     </div>
-
-                    <div className="cp-progress-section">
-                        <div className="cp-progress-label">
-                            <span>This Month:</span>
-                            <span>₹{config.monthlyUsed.toLocaleString()} / ₹{config.monthlyBudget.toLocaleString()} used</span>
-                        </div>
-                        <div className="cp-progress-bar">
-                            <div
-                                className="cp-progress-fill"
-                                style={{ width: `${usagePercentage}%` }}
-                            />
-                        </div>
+                    <div className="header-actions">
+                        <span className="date-badge">Today</span>
+                        <button className="icon-btn"><Bell size={18} /></button>
+                        <button className="save-btn" onClick={saveConfigToBackend}>
+                            <Save size={16} />
+                            Save Changes
+                        </button>
                     </div>
-                </div>
+                </header>
 
-                {/* Inventory Intelligence */}
-                <div className="cp-card">
-                    <h2 className="cp-card-title">
-                        <Brain size={20} className="card-icon yellow" />
-                        Inventory Intelligence
-                    </h2>
+                <div className="main-content">
+                    <h1 className="page-title">Control Panel</h1>
 
-                    <div className="cp-form-row">
-                        <label>Buffer Stock:</label>
-                        <div className="cp-number-input">
-                            <input
-                                type="number"
-                                value={config.bufferStock}
-                                onChange={(e) => handleNumberInput('bufferStock', e.target.value)}
-                                min="1"
-                            />
-                            <span className="unit">days</span>
-                        </div>
-                    </div>
-
-                    <div className="cp-form-row">
-                        <label>Min Demand:</label>
-                        <div className="cp-number-input">
-                            <input
-                                type="number"
-                                value={config.minDemand}
-                                onChange={(e) => handleNumberInput('minDemand', e.target.value)}
-                                min="1"
-                            />
-                            <span className="unit">units</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Supplier Configuration */}
-                <div className="cp-card">
-                    <h2 className="cp-card-title">
-                        <Users size={20} className="card-icon blue" />
-                        Supplier Configuration
-                    </h2>
-
-                    <div className="cp-supplier-list">
-                        {config.suppliers.map(supplier => (
-                            <div key={supplier.id} className="cp-supplier-row">
-                                <span className="supplier-id">{supplier.id}</span>
-                                <div className="supplier-address-wrapper">
-                                    <input
-                                        type="text"
-                                        className={`supplier-address-input ${editingSupplier === supplier.id ? 'editing' : ''}`}
-                                        value={supplier.address}
-                                        onChange={(e) => handleSupplierAddressChange(supplier.id, e.target.value)}
-                                        disabled={editingSupplier !== supplier.id}
-                                    />
-                                    <button
-                                        className="supplier-edit-btn"
-                                        onClick={() => toggleEditSupplier(supplier.id)}
-                                        title={editingSupplier === supplier.id ? "Save address" : "Edit address"}
-                                    >
-                                        {editingSupplier === supplier.id ? (
-                                            <Check size={14} />
-                                        ) : (
-                                            <Pencil size={14} />
-                                        )}
-                                    </button>
-                                </div>
-                                <button
-                                    className={`supplier-status ${supplier.status.toLowerCase()}`}
-                                    onClick={() => toggleSupplierStatus(supplier.id)}
-                                >
-                                    {supplier.status}
-                                </button>
+                    {/* Inventory Intelligence Section */}
+                    <div className="inventory-intelligence-section">
+                        {/* Inventory Intelligence Card */}
+                        <div className="config-card">
+                            <div className="config-card-header">
+                                <Package size={20} className="config-icon yellow" />
+                                <h3>Inventory Intelligence</h3>
                             </div>
-                        ))}
+                            <p className="config-desc">Configure safety stock levels and demand thresholds.</p>
+
+                            <div className="config-form">
+                                <div className="config-row">
+                                    <label>Buffer Stock:</label>
+                                    <div className="config-input-group">
+                                        <input
+                                            type="number"
+                                            value={config.bufferStock}
+                                            onChange={(e) => handleNumberInput('bufferStock', e.target.value)}
+                                            min="1"
+                                        />
+                                        <span className="config-unit">days</span>
+                                    </div>
+                                </div>
+                                <div className="config-row">
+                                    <label>Min Demand Threshold:</label>
+                                    <div className="config-input-group">
+                                        <input
+                                            type="number"
+                                            value={config.minDemand}
+                                            onChange={(e) => handleNumberInput('minDemand', e.target.value)}
+                                            min="1"
+                                        />
+                                        <span className="config-unit">units</span>
+                                    </div>
+                                </div>
+                                <div className="config-row">
+                                    <label>Monthly Budget:</label>
+                                    <div className="config-input-group">
+                                        <span className="config-currency">₹</span>
+                                        <input
+                                            type="number"
+                                            value={config.monthlyBudget}
+                                            onChange={(e) => handleNumberInput('monthlyBudget', e.target.value)}
+                                            min="0"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mini Stats (Beside Inventory Intelligence) */}
+                        <div className="mini-stats">
+                            <div className="mini-stat-card">
+                                <div className="mini-icon green">
+                                    <Package size={20} />
+                                </div>
+                                <div className="mini-content">
+                                    <span className="mini-label">Buffer Stock</span>
+                                    <span className="mini-value">{config.bufferStock} days</span>
+                                </div>
+                            </div>
+                            <div className="mini-stat-card">
+                                <div className="mini-icon blue">
+                                    <Activity size={20} />
+                                </div>
+                                <div className="mini-content">
+                                    <span className="mini-label">Min Demand</span>
+                                    <span className="mini-value">{config.minDemand} units</span>
+                                </div>
+                            </div>
+                            <div className="mini-stat-card total-profit">
+                                <span className="profit-label">Total Budget</span>
+                                <span className="profit-value">₹{config.monthlyBudget.toLocaleString()}</span>
+                                <div className="profit-chart">
+                                    <svg viewBox="0 0 100 30" className="sparkline">
+                                        <polyline
+                                            fill="none"
+                                            stroke="#4ade80"
+                                            strokeWidth="2"
+                                            points="0,25 20,20 40,15 60,18 80,10 100,5"
+                                        />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                </div>
+                    {/* Stats Cards Row - Below Inventory Intelligence */}
+                    <div className="stats-row">
+                        <div className="stat-card">
+                            <span className="stat-label">Monthly Budget</span>
+                            <div className="stat-value">₹{(config.monthlyBudget / 100000).toFixed(1)}L</div>
+                        </div>
+                        <div className="stat-card">
+                            <span className="stat-label">Budget Used</span>
+                            <div className="stat-value">₹{config.monthlyUsed.toLocaleString()}</div>
+                            <div className="stat-change positive">
+                                <TrendingUp size={14} />
+                                <span>{usagePercentage}% of total</span>
+                            </div>
+                        </div>
+                        <div className="stat-card">
+                            <span className="stat-label">Quarterly Goal</span>
+                            <div className="stat-value">{quarterlyGoal}%</div>
+                            <div className="stat-sub">Goal: ₹15L</div>
+                        </div>
+                        <div className="stat-card">
+                            <span className="stat-label">Active Suppliers</span>
+                            <div className="stat-value">{activeSuppliers}</div>
+                            <div className="stat-change positive">
+                                <TrendingUp size={14} />
+                                <span>All operational</span>
+                            </div>
+                        </div>
+                    </div>
 
-                {/* Supplier Budget Split */}
-                <div className="cp-card">
-                    <h2 className="cp-card-title">
-                        <Wallet size={20} className="card-icon green" />
-                        Supplier Budget Split
-                    </h2>
+                    {/* Supplier Section - Below Stats Row */}
+                    <div className="supplier-section">
+                        {/* Supplier List */}
+                        <div className="supplier-table-card">
+                            <div className="card-header">
+                                <h3>Supplier List</h3>
+                                <button className="more-btn"><MoreVertical size={16} /></button>
+                            </div>
+                            <table className="supplier-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {config.suppliers.map(supplier => (
+                                        <tr key={supplier.id}>
+                                            <td>
+                                                <div className="supplier-info">
+                                                    <div className="supplier-avatar">{supplier.id.slice(-1)}</div>
+                                                    <div>
+                                                        <span className="supplier-name">{supplier.name || supplier.id}</span>
+                                                        {editingSupplier === supplier.id ? (
+                                                            <input
+                                                                type="text"
+                                                                className="address-input"
+                                                                value={supplier.address}
+                                                                onChange={(e) => handleSupplierAddressChange(supplier.id, e.target.value)}
+                                                            />
+                                                        ) : (
+                                                            <span className="supplier-address">{supplier.address}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    className={`status-badge ${supplier.status.toLowerCase()}`}
+                                                    onClick={() => toggleSupplierStatus(supplier.id)}
+                                                >
+                                                    {supplier.status}
+                                                </button>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    className="edit-btn"
+                                                    onClick={() => toggleEditSupplier(supplier.id)}
+                                                >
+                                                    {editingSupplier === supplier.id ? <Check size={14} /> : <Pencil size={14} />}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
 
-                    <p className="cp-card-description">
-                        Allocate what percentage of your monthly budget goes to each supplier.
-                    </p>
+                        {/* Supplier Budget Split Card */}
+                        <div className="config-card">
+                            <div className="config-card-header">
+                                <Wallet size={20} className="config-icon green" />
+                                <h3>Supplier Budget Split</h3>
+                            </div>
+                            <p className="config-desc">Allocate what percentage of your monthly budget goes to each supplier.</p>
 
-                    <div className="cp-budget-split-list">
-                        {Object.entries(config.supplierBudgetSplit).map(([supplierId, percentage]) => (
-                            <div key={supplierId} className="cp-budget-split-row">
-                                <span className="supplier-id">{supplierId}</span>
-                                <div className="cp-number-input">
+                            <div className="budget-split-list">
+                                {config.suppliers.map(supplier => (
+                                    <div key={supplier.id} className="budget-split-row">
+                                        <span className="split-supplier-id">{supplier.id}</span>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={supplier.allocation}
+                                            onChange={(e) => handleSupplierAllocationChange(supplier.id, e.target.value)}
+                                            className="supplier-slider"
+                                        />
+                                        <span className="split-value">{supplier.allocation}%</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="split-total">
+                                <span>Total:</span>
+                                <span className={config.suppliers.reduce((a, b) => a + b.allocation, 0) === 100 ? 'valid' : 'invalid'}>
+                                    {config.suppliers.reduce((a, b) => a + b.allocation, 0)}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Budget Section - Priority Split on Left, Budget Overview on Right */}
+                    <div className="budget-section">
+                        {/* Priority Split Card */}
+                        <div className="config-card">
+                            <div className="config-card-header">
+                                <BarChart3 size={20} className="config-icon purple" />
+                                <h3>Priority Budget Split</h3>
+                            </div>
+                            <p className="config-desc">Set how the cycle budget is distributed across priority levels.</p>
+
+                            <div className="priority-split-form">
+                                <div className="priority-split-row">
+                                    <span className="priority-label-card">
+                                        <span className="dot high"></span>High Priority
+                                    </span>
                                     <input
-                                        type="number"
-                                        value={percentage}
-                                        onChange={(e) => handleBudgetSplitChange(supplierId, e.target.value)}
+                                        type="range"
                                         min="0"
                                         max="100"
+                                        value={config.prioritySplit.high}
+                                        onChange={(e) => handlePrioritySplitChange('high', e.target.value)}
+                                        className="priority-slider-card high"
                                     />
-                                    <span className="unit">%</span>
+                                    <span className="priority-value-card">{config.prioritySplit.high}%</span>
                                 </div>
-                                <div className="allocation-bar-wrapper">
-                                    <div className="allocation-bar-fill" style={{ width: `${percentage}%` }}></div>
+                                <div className="priority-split-row">
+                                    <span className="priority-label-card">
+                                        <span className="dot medium"></span>Medium Priority
+                                    </span>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={config.prioritySplit.medium}
+                                        onChange={(e) => handlePrioritySplitChange('medium', e.target.value)}
+                                        className="priority-slider-card medium"
+                                    />
+                                    <span className="priority-value-card">{config.prioritySplit.medium}%</span>
+                                </div>
+                                <div className="priority-split-row">
+                                    <span className="priority-label-card">
+                                        <span className="dot low"></span>Low Priority
+                                    </span>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={config.prioritySplit.low}
+                                        onChange={(e) => handlePrioritySplitChange('low', e.target.value)}
+                                        className="priority-slider-card low"
+                                    />
+                                    <span className="priority-value-card">{config.prioritySplit.low}%</span>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-
-                    <div className="cp-total-allocation">
-                        <span>Total:</span>
-                        <span className={Object.values(config.supplierBudgetSplit).reduce((a, b) => a + b, 0) === 100 ? 'valid' : 'invalid'}>
-                            {Object.values(config.supplierBudgetSplit).reduce((a, b) => a + b, 0)}%
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Budget Allocation Sliders */}
-            <div className="cp-card full-width">
-                <h2 className="cp-card-title">
-                    <Sliders size={20} className="card-icon purple" />
-                    Budget Allocation Controls
-                </h2>
-
-                {/* Restock Budget Limit Slider */}
-                <div className="cp-slider-section">
-                    <div className="cp-slider-header">
-                        <label>Restock Run Budget Limit</label>
-                        <span className="slider-value">{config.restockBudgetLimit}%</span>
-                    </div>
-                    <p className="cp-slider-desc">
-                        How much of the monthly budget can be spent in one restock run?
-                    </p>
-                    <div className="cp-slider-wrapper">
-                        <input
-                            type="range"
-                            min="5"
-                            max="100"
-                            value={config.restockBudgetLimit}
-                            onChange={(e) => handleRestockLimitChange(e.target.value)}
-                            className="cp-slider"
-                        />
-                        <div className="slider-labels">
-                            <span>5%</span>
-                            <span>50%</span>
-                            <span>100%</span>
-                        </div>
-                    </div>
-                    <div className="slider-amount-display">
-                        Max per run: <strong>₹{((config.monthlyBudget * config.restockBudgetLimit) / 100).toLocaleString()}</strong>
-                    </div>
-                </div>
-
-                <div className="cp-slider-divider"></div>
-
-                {/* Priority Budget Split */}
-                <div className="cp-slider-section">
-                    <div className="cp-slider-header">
-                        <div className="header-with-icon">
-                            <PieChart size={18} className="mini-icon" />
-                            <label>Priority Budget Split</label>
-                        </div>
-                        <span className={`slider-total ${Object.values(config.prioritySplit).reduce((a, b) => a + b, 0) === 100 ? 'valid' : 'invalid'}`}>
-                            Total: {Object.values(config.prioritySplit).reduce((a, b) => a + b, 0)}%
-                        </span>
-                    </div>
-                    <p className="cp-slider-desc">
-                        How should the cycle budget be split across priorities?
-                    </p>
-
-                    <div className="priority-sliders">
-                        {/* High Priority */}
-                        <div className="priority-slider-row">
-                            <div className="priority-label high">
-                                <span className="priority-dot"></span>
-                                High Priority
+                            <div className="split-total">
+                                <span>Total:</span>
+                                <span className={Object.values(config.prioritySplit).reduce((a, b) => a + b, 0) === 100 ? 'valid' : 'invalid'}>
+                                    {Object.values(config.prioritySplit).reduce((a, b) => a + b, 0)}%
+                                </span>
                             </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={config.prioritySplit.high}
-                                onChange={(e) => handlePrioritySplitChange('high', e.target.value)}
-                                className="cp-slider priority-high"
-                            />
-                            <span className="priority-value">{config.prioritySplit.high}%</span>
                         </div>
 
-                        {/* Medium Priority */}
-                        <div className="priority-slider-row">
-                            <div className="priority-label medium">
-                                <span className="priority-dot"></span>
-                                Medium Priority
+                        {/* Budget Overview */}
+                        <div className="budget-overview-card">
+                            <div className="card-header">
+                                <h3>Budget Overview</h3>
+                                <button className="more-btn"><MoreVertical size={16} /></button>
                             </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={config.prioritySplit.medium}
-                                onChange={(e) => handlePrioritySplitChange('medium', e.target.value)}
-                                className="cp-slider priority-medium"
-                            />
-                            <span className="priority-value">{config.prioritySplit.medium}%</span>
-                        </div>
-
-                        {/* Low Priority */}
-                        <div className="priority-slider-row">
-                            <div className="priority-label low">
-                                <span className="priority-dot"></span>
-                                Low Priority
+                            <div className="budget-content">
+                                <div className="donut-chart">
+                                    <svg viewBox="0 0 100 100" className="donut">
+                                        <circle cx="50" cy="50" r="40" fill="none" stroke="#1a2e1a" strokeWidth="12" />
+                                        <circle
+                                            cx="50" cy="50" r="40" fill="none"
+                                            stroke="#4ade80" strokeWidth="12"
+                                            strokeDasharray={`${config.prioritySplit.high * 2.51} 251`}
+                                            strokeDashoffset="0"
+                                            transform="rotate(-90 50 50)"
+                                        />
+                                        <circle
+                                            cx="50" cy="50" r="40" fill="none"
+                                            stroke="#fbbf24" strokeWidth="12"
+                                            strokeDasharray={`${config.prioritySplit.medium * 2.51} 251`}
+                                            strokeDashoffset={`${-config.prioritySplit.high * 2.51}`}
+                                            transform="rotate(-90 50 50)"
+                                        />
+                                        <circle
+                                            cx="50" cy="50" r="40" fill="none"
+                                            stroke="#60a5fa" strokeWidth="12"
+                                            strokeDasharray={`${config.prioritySplit.low * 2.51} 251`}
+                                            strokeDashoffset={`${-(config.prioritySplit.high + config.prioritySplit.medium) * 2.51}`}
+                                            transform="rotate(-90 50 50)"
+                                        />
+                                    </svg>
+                                    <div className="donut-center">
+                                        <span className="donut-value">{config.restockBudgetLimit}%</span>
+                                        <span className="donut-label">Per Run</span>
+                                    </div>
+                                </div>
+                                <div className="budget-breakdown">
+                                    <div className="breakdown-header">
+                                        <Wallet size={18} />
+                                        <div>
+                                            <span className="label">Restock Limit</span>
+                                            <span className="value">₹{((config.monthlyBudget * config.restockBudgetLimit) / 100).toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                    {/* Editable Restock Limit Slider */}
+                                    <div className="restock-limit-control">
+                                        <input
+                                            type="range"
+                                            min="5"
+                                            max="100"
+                                            value={config.restockBudgetLimit}
+                                            onChange={(e) => handleRestockLimitChange(e.target.value)}
+                                            className="restock-slider"
+                                        />
+                                        <span className="restock-value">{config.restockBudgetLimit}%</span>
+                                    </div>
+                                    <div className="breakdown-items">
+                                        <div className="breakdown-item">
+                                            <span className="dot high"></span>
+                                            <span className="name">High Priority</span>
+                                            <span className="amount">{config.prioritySplit.high}%</span>
+                                        </div>
+                                        <div className="breakdown-item">
+                                            <span className="dot medium"></span>
+                                            <span className="name">Medium Priority</span>
+                                            <span className="amount">{config.prioritySplit.medium}%</span>
+                                        </div>
+                                        <div className="breakdown-item">
+                                            <span className="dot low"></span>
+                                            <span className="name">Low Priority</span>
+                                            <span className="amount">{config.prioritySplit.low}%</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={config.prioritySplit.low}
-                                onChange={(e) => handlePrioritySplitChange('low', e.target.value)}
-                                className="cp-slider priority-low"
-                            />
-                            <span className="priority-value">{config.prioritySplit.low}%</span>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Safety Controls */}
-            <div className="cp-card full-width">
-                <h2 className="cp-card-title">
-                    <Shield size={20} className="card-icon orange" />
-                    Safety Controls
-                </h2>
-
-                <p className="cp-card-description">
-                    Use the button below to immediately pause all AI spending activity.
-                </p>
-
-                <button className="cp-danger-btn">
-                    Pause AI Spending Session
-                </button>
-            </div>
-
-            {/* Save Changes Button */}
-            <div className="cp-save-section">
-                <button className="cp-save-btn" onClick={saveConfigToBackend}>
-                    <Save size={18} />
-                    Save Changes
-                </button>
-            </div>
+            </main>
         </div>
     );
 }
 
 export default ControlPanel;
+
