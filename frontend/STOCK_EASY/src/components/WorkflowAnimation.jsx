@@ -10,55 +10,55 @@ const WorkflowAnimation = () => {
                 {/* Input to AI */}
                 <path
                     className="connection-line line-1"
-                    d="M 130 85 L 90 160"
+                    d="M 130 30 L 80 210"
                     fill="none"
                     stroke="rgba(34, 197, 94, 0.4)"
                     strokeWidth="2"
+                    strokeLinecap="round"
                     strokeDasharray="5,5"
                 />
-                {/* Input to Backend */}
-                {/* <path
-                    className="connection-line line-2"
-                    d="M 210 85 L 390 100"
-                    fill="none"
-                    stroke="rgba(34, 197, 94, 0.4)"
-                    strokeWidth="2"
-                    strokeDasharray="5,5"
-                /> */}
+
                 {/* AI to Backend */}
                 <path
-                    className="connection-line line-3"
-                    d="M 120 210 L 290 110"
+                    className="connection-line line-2"
+                    d="M 80 210 L 347.5 100"
                     fill="none"
                     stroke="rgba(34, 197, 94, 0.4)"
                     strokeWidth="2"
-                    strokeDasharray="5,5"
-                />
-                <path
-                    className="connection-line line-3"
-                    d="M 330 210 L 300 110"
-                    fill="none"
-                    stroke="rgba(34, 197, 94, 0.4)"
-                    strokeWidth="2"
+                    strokeLinecap="round"
                     strokeDasharray="5,5"
                 />
 
                 {/* AI to Dashboard */}
                 <path
-                    className="connection-line line-4"
-                    d="M 80 270 L 80 360"
+                    className="connection-line line-3"
+                    d="M 80 210 L 70 390"
                     fill="none"
                     stroke="rgba(34, 197, 94, 0.4)"
                     strokeWidth="2"
+                    strokeLinecap="round"
                     strokeDasharray="5,5"
                 />
+
                 {/* Security to Inventory */}
                 <path
-                    className="connection-line line-5"
-                    d="M 340 240 L 340 350"
+                    className="connection-line line-4"
+                    d="M 342.5 207.5 L 350 385"
                     fill="none"
                     stroke="rgba(34, 197, 94, 0.4)"
                     strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeDasharray="5,5"
+                />
+
+                {/* Backend to Security (missing) */}
+                <path
+                    className="connection-line line-5"
+                    d="M 347.5 100 L 342.5 207.5"
+                    fill="none"
+                    stroke="rgba(34, 197, 94, 0.4)"
+                    strokeWidth="2"
+                    strokeLinecap="round"
                     strokeDasharray="5,5"
                 />
             </svg>
