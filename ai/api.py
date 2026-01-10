@@ -47,6 +47,10 @@ TRANSACTIONS = []
 INVENTORY_STATS = {"healthy": 0, "low": 0, "critical": 0}
 TOTAL_SPENT_WEI = 0
 
+# 🔥 AGENT CACHE (IMPORTANT)
+LAST_AGENT_RESULT: Optional[dict] = None
+LAST_AGENT_RUN_AT: Optional[datetime] = None
+
 # -------------------------------------------------
 # OWNER INVENTORY (CSV)
 # -------------------------------------------------
@@ -83,13 +87,11 @@ scheduler = BackgroundScheduler()
 def startup():
     global CURRENT_CONFIG, INVENTORY_STATS
 
-    # ---- Load config
     saved = load_config()
     if saved:
         CURRENT_CONFIG = saved
         print("🧠 Loaded agent config from MongoDB")
 
-    # ---- Load inventory ONCE
     if OWNER_INVENTORY_CSV.exists():
         df = pd.read_csv(OWNER_INVENTORY_CSV)
         INVENTORY_STATS = {
@@ -134,7 +136,7 @@ def health():
     return {"status": "running"}
 
 # =================================================
-# DASHBOARD (⚡ FAST)
+# DASHBOARD STATS (⚡ FAST)
 # =================================================
 @app.get("/api/dashboard/stats")
 def dashboard_stats():
@@ -157,11 +159,18 @@ def dashboard_stats():
     }
 
 # =================================================
-# PREVIEW
+# PREVIEW (CACHED — VERY IMPORTANT)
 # =================================================
 @app.get("/restock-items")
 def preview():
-    return run_agent(get_final_agent_config())
+    global LAST_AGENT_RESULT, LAST_AGENT_RUN_AT
+
+    if LAST_AGENT_RESULT:
+        return LAST_AGENT_RESULT
+
+    LAST_AGENT_RESULT = run_agent(get_final_agent_config())
+    LAST_AGENT_RUN_AT = datetime.utcnow()
+    return LAST_AGENT_RESULT
 
 # =================================================
 # RUN AGENT + PAYMENTS
@@ -169,8 +178,14 @@ def preview():
 @app.post("/run-restock")
 def run_restock(execute_payments: bool = False):
     global TOTAL_SPENT_WEI, INVENTORY_STATS
+    global LAST_AGENT_RESULT, LAST_AGENT_RUN_AT
 
     result = run_agent(get_final_agent_config())
+
+    # 🔥 Update cache
+    LAST_AGENT_RESULT = result
+    LAST_AGENT_RUN_AT = datetime.utcnow()
+
     if not execute_payments:
         return result
 
