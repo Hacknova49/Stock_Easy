@@ -1,3 +1,7 @@
+<img width="1893" height="1069" alt="Screenshot 2026-01-10 233722" src="https://github.com/user-attachments/assets/1c9f3f10-2f80-4da4-b6de-28059b853729" />
+<img width="1874" height="1078" alt="image" src="https://github.com/user-attachments/assets/8cba5924-4fff-44f8-a3f0-c4c16ba066eb" />
+<img width="1889" height="1068" alt="Screenshot 2026-01-10 234313" src="https://github.com/user-attachments/assets/d8bfb668-bee3-4d32-909c-e707439f3cfc" />
+
 # 📦 StockEasy — Autonomous Procurement Agent with Restricted Payment Intents
 
 **Track:** Payment Protocol for the AI Economy  
