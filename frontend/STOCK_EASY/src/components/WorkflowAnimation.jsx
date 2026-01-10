@@ -10,30 +10,39 @@ const WorkflowAnimation = () => {
                 {/* Input to AI */}
                 <path
                     className="connection-line line-1"
-                    d="M 210 85 L 90 160"
+                    d="M 130 85 L 90 160"
                     fill="none"
                     stroke="rgba(34, 197, 94, 0.4)"
                     strokeWidth="2"
                     strokeDasharray="5,5"
                 />
                 {/* Input to Backend */}
-                <path
+                {/* <path
                     className="connection-line line-2"
-                    d="M 210 85 L 340 100"
+                    d="M 210 85 L 390 100"
                     fill="none"
                     stroke="rgba(34, 197, 94, 0.4)"
                     strokeWidth="2"
                     strokeDasharray="5,5"
-                />
-                {/* AI to Security */}
+                /> */}
+                {/* AI to Backend */}
                 <path
                     className="connection-line line-3"
-                    d="M 130 210 L 290 210"
+                    d="M 120 210 L 290 110"
                     fill="none"
                     stroke="rgba(34, 197, 94, 0.4)"
                     strokeWidth="2"
                     strokeDasharray="5,5"
                 />
+                <path
+                    className="connection-line line-3"
+                    d="M 330 210 L 300 110"
+                    fill="none"
+                    stroke="rgba(34, 197, 94, 0.4)"
+                    strokeWidth="2"
+                    strokeDasharray="5,5"
+                />
+
                 {/* AI to Dashboard */}
                 <path
                     className="connection-line line-4"
