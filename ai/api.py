@@ -39,10 +39,17 @@ from ai.security import TransactionRequest, UserSecurityProfile
 from ai.audit import log_event
 
 # -------------------------------------------------
-# GLOBAL STATE
+# GLOBAL STATE (CACHED)
 # -------------------------------------------------
 CURRENT_CONFIG: Optional[dict] = None
 TRANSACTIONS = []
+
+INVENTORY_STATS = {"healthy": 0, "low": 0, "critical": 0}
+TOTAL_SPENT_WEI = 0
+
+# 🔥 AGENT CACHE (IMPORTANT)
+LAST_AGENT_RESULT: Optional[dict] = None
+LAST_AGENT_RUN_AT: Optional[datetime] = None
 
 # -------------------------------------------------
 # OWNER INVENTORY (CSV)
@@ -78,14 +85,20 @@ scheduler = BackgroundScheduler()
 
 @app.on_event("startup")
 def startup():
-    global CURRENT_CONFIG
+    global CURRENT_CONFIG, INVENTORY_STATS
 
     saved = load_config()
     if saved:
         CURRENT_CONFIG = saved
         print("🧠 Loaded agent config from MongoDB")
-    else:
-        print("ℹ️ No saved config found")
+
+    if OWNER_INVENTORY_CSV.exists():
+        df = pd.read_csv(OWNER_INVENTORY_CSV)
+        INVENTORY_STATS = {
+            "healthy": int((df["current_stock"] > 20).sum()),
+            "low": int(((df["current_stock"] <= 20) & (df["current_stock"] > 5)).sum()),
+            "critical": int((df["current_stock"] <= 5).sum()),
+        }
 
     scheduler.add_job(auto_run, "interval", minutes=1000)
     scheduler.start()
@@ -108,10 +121,7 @@ def save_agent_config(config: dict):
 
 @app.get("/api/agent/config")
 def get_agent_config():
-    return {
-        "has_config": CURRENT_CONFIG is not None,
-        "config": CURRENT_CONFIG,
-    }
+    return {"has_config": CURRENT_CONFIG is not None, "config": CURRENT_CONFIG}
 
 def get_final_agent_config() -> dict:
     if CURRENT_CONFIG:
@@ -126,30 +136,11 @@ def health():
     return {"status": "running"}
 
 # =================================================
-# DASHBOARD STATS (USED BY HOME PAGE)
+# DASHBOARD STATS (⚡ FAST)
 # =================================================
 @app.get("/api/dashboard/stats")
 def dashboard_stats():
-    """
-    Lightweight dashboard stats for Home.jsx
-    (NO restock execution, NO payments)
-    """
-
-    # -----------------------------
-    # Load owner inventory
-    # -----------------------------
-    inventory_df = pd.read_csv(OWNER_INVENTORY_CSV)
-
-    healthy = int((inventory_df["current_stock"] > 20).sum())
-    low = int(((inventory_df["current_stock"] <= 20) & (inventory_df["current_stock"] > 5)).sum())
-    critical = int((inventory_df["current_stock"] <= 5).sum())
-
-    # -----------------------------
-    # Budget usage from transactions
-    # -----------------------------
-    total_spent_wei = sum(t["amount_wei"] for t in TRANSACTIONS)
-    total_spent_pol = total_spent_wei / 1e18
-    total_spent_inr = int(total_spent_pol * POL_TO_INR)
+    total_spent_inr = int((TOTAL_SPENT_WEI / 1e18) * POL_TO_INR)
 
     monthly_budget = (
         CURRENT_CONFIG.get("monthlyBudget")
@@ -164,58 +155,59 @@ def dashboard_stats():
             "budgetUsed": total_spent_inr,
             "budgetRemaining": max(monthly_budget - total_spent_inr, 0),
         },
-        "stockHealth": {
-            "healthy": healthy,
-            "low": low,
-            "critical": critical,
-        },
+        "stockHealth": INVENTORY_STATS,
     }
 
-
 # =================================================
-# PREVIEW (NO STATE CHANGES)
+# PREVIEW (CACHED — VERY IMPORTANT)
 # =================================================
 @app.get("/restock-items")
 def preview():
-    return run_agent(get_final_agent_config())
+    global LAST_AGENT_RESULT, LAST_AGENT_RUN_AT
+
+    if LAST_AGENT_RESULT:
+        return LAST_AGENT_RESULT
+
+    LAST_AGENT_RESULT = run_agent(get_final_agent_config())
+    LAST_AGENT_RUN_AT = datetime.utcnow()
+    return LAST_AGENT_RESULT
 
 # =================================================
 # RUN AGENT + PAYMENTS
 # =================================================
 @app.post("/run-restock")
 def run_restock(execute_payments: bool = False):
-    final_config = get_final_agent_config()
-    result = run_agent(final_config)
+    global TOTAL_SPENT_WEI, INVENTORY_STATS
+    global LAST_AGENT_RESULT, LAST_AGENT_RUN_AT
+
+    result = run_agent(get_final_agent_config())
+
+    # 🔥 Update cache
+    LAST_AGENT_RESULT = result
+    LAST_AGENT_RUN_AT = datetime.utcnow()
 
     if not execute_payments:
         return result
 
     owner_df = pd.read_csv(OWNER_INVENTORY_CSV)
 
-    total_spent = 0
-    ordered_items = []
-
     for d in result["decisions"]:
         intent = d["payment_intent"]
-        product = d["product"]
-        qty = d["restock_quantity"]
         amount_wei = int(intent["amount_wei"])
+        qty = d["restock_quantity"]
+        product = d["product"]
         supplier_id = d["supplier_id"]
 
-        if total_spent + amount_wei > USER_BALANCE_WEI:
+        if TOTAL_SPENT_WEI + amount_wei > USER_BALANCE_WEI:
             continue
 
-        # ATOMIC SUPPLIER RESERVE
         update = supplier_inventory_collection.update_one(
             {
                 "product": product,
                 "supplier_id": supplier_id,
                 "available_stock": {"$gte": qty},
             },
-            {
-                "$inc": {"available_stock": -qty},
-                "$set": {"last_updated": datetime.utcnow()},
-            },
+            {"$inc": {"available_stock": -qty}, "$set": {"last_updated": datetime.utcnow()}},
         )
 
         if update.modified_count == 0:
@@ -227,8 +219,7 @@ def run_restock(execute_payments: bool = False):
             live=os.getenv("LIVE_PAYMENTS") == "true",
         )
 
-        total_spent += amount_wei
-        ordered_items.append(f"{product} x{qty}")
+        TOTAL_SPENT_WEI += amount_wei
 
         TRANSACTIONS.append({
             "cycle_id": result["cycle_id"],
@@ -239,24 +230,21 @@ def run_restock(execute_payments: bool = False):
             "timestamp": datetime.utcnow().isoformat(),
         })
 
-        owner_df.loc[
-            owner_df["product"] == product, "current_stock"
-        ] += qty
+        owner_df.loc[owner_df["product"] == product, "current_stock"] += qty
 
     owner_df.to_csv(OWNER_INVENTORY_CSV, index=False)
 
+    INVENTORY_STATS = {
+        "healthy": int((owner_df["current_stock"] > 20).sum()),
+        "low": int(((owner_df["current_stock"] <= 20) & (owner_df["current_stock"] > 5)).sum()),
+        "critical": int((owner_df["current_stock"] <= 5).sum()),
+    }
+
     send_whatsapp_message(
-        f"✅ StockEasy Restock Complete\n"
-        f"Cycle: {result['cycle_id']}\n"
-        f"Orders: {len(ordered_items)}"
+        f"✅ StockEasy Restock Complete\nCycle: {result['cycle_id']}"
     )
 
-    return {
-        "status": "success",
-        "cycle_id": result["cycle_id"],
-        "orders": len(ordered_items),
-        "total_spent_pol": total_spent / 1e18,
-    }
+    return {"status": "success", "cycle_id": result["cycle_id"]}
 
 # =================================================
 # TRANSACTIONS
@@ -270,9 +258,7 @@ def transactions():
 # =================================================
 @app.post("/api/transaction/simulate")
 def simulate(tx: TransactionRequest):
-    spent_wei = sum(t["amount_wei"] for t in TRANSACTIONS)
-    spent_pol = spent_wei / 1e18
-    spent_inr = int(spent_pol * POL_TO_INR)
+    spent_inr = int((TOTAL_SPENT_WEI / 1e18) * POL_TO_INR)
 
     user = UserSecurityProfile(
         approved_addresses=["0x4C2c3EcB63647E34Bd473A1DEc2708D365806Ed2"],
@@ -291,9 +277,6 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 
 def auto_run():
     try:
-        requests.post(
-            f"{API_BASE_URL}/run-restock?execute_payments=true",
-            timeout=30,
-        )
+        requests.post(f"{API_BASE_URL}/run-restock?execute_payments=true", timeout=30)
     except Exception as e:
         print("❌ Auto-run error:", e)

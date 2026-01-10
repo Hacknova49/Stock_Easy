@@ -1,5 +1,3 @@
-# ai/restock_agent.py
-
 import pandas as pd
 import logging
 from datetime import datetime, timedelta, timezone
@@ -64,12 +62,12 @@ def load_owner_inventory() -> pd.DataFrame:
 
 
 def is_critical(row: pd.Series) -> bool:
-    return row["current_stock"] < row["avg_daily_sales"] * CRITICAL_STOCK_DAYS
+    return row.current_stock < row.avg_daily_sales * CRITICAL_STOCK_DAYS
 
 
-def restock_decision(row: pd.Series) -> dict:
-    predicted = int(row["predicted_7d_demand"])
-    current = int(row["current_stock"])
+def restock_decision(row) -> dict:
+    predicted = int(row.predicted_7d_demand)
+    current = int(row.current_stock)
 
     safety = int(0.2 * predicted)
     required = predicted + safety
@@ -107,7 +105,7 @@ def run_agent(config: Optional[dict] = None) -> dict:
     # -------------------------------
     if LAST_RESTOCK_AT:
         cooldown_active = now - LAST_RESTOCK_AT < timedelta(days=RESTOCK_COOLDOWN_DAYS)
-        critical_exists = owner_df.apply(is_critical, axis=1).any()
+        critical_exists = (owner_df["current_stock"] < owner_df["avg_daily_sales"] * CRITICAL_STOCK_DAYS).any()
         if cooldown_active and not critical_exists:
             logger.info("Cooldown active — skipping restock")
             return {
@@ -134,6 +132,26 @@ def run_agent(config: Optional[dict] = None) -> dict:
     logger.info(f"Cycle budget: ₹{CYCLE_BUDGET}")
 
     # -------------------------------
+    # LOAD SUPPLIER INVENTORY ONCE
+    # -------------------------------
+    allowed_suppliers = list(config["supplier_address_map"].keys())
+
+    supplier_df = pd.DataFrame(
+        supplier_inventory_collection.find(
+            {"supplier_id": {"$in": allowed_suppliers}},
+            {
+                "_id": 0,
+                "product": 1,
+                "supplier_id": 1,
+                "supplier_cost": 1,
+                "available_stock": 1,
+            }
+        )
+    )
+
+    supplier_df = supplier_df.sort_values("supplier_cost")
+
+    # -------------------------------
     # FILTER & PRIORITIZE SKUs
     # -------------------------------
     owner_df = owner_df[
@@ -153,72 +171,46 @@ def run_agent(config: Optional[dict] = None) -> dict:
 
     decisions = []
     total_spent = 0
-
-    # --------------------------------
-    # RESERVED STOCK (ANTI DOUBLE-USE)
-    # --------------------------------
     reserved_stock = defaultdict(int)
 
     # ===============================
-    # CORE DECISION LOOP
+    # CORE DECISION LOOP (FAST)
     # ===============================
-    for _, row in owner_df.iterrows():
+    for row in owner_df.itertuples(index=False):
         decision = restock_decision(row)
         if decision["decision"] != "RESTOCK":
             continue
 
-        product = row["product"]
+        product = row.product
         qty = int(decision["qty"])
-        priority = int(row["priority"])
+        priority = int(row.priority)
 
-        # --------------------------------
-        # FETCH CHEAPEST AVAILABLE SUPPLIER
-        # --------------------------------
-        supplier_doc = supplier_inventory_collection.find_one(
-            {
-                "product": product,
-                "supplier_id": {
-                    "$in": list(config["supplier_address_map"].keys())
-                },
-                "available_stock": {
-                    "$gte": qty + reserved_stock[(product, "$ANY")]
-                },
-            },
-            sort=[("supplier_cost", 1)],
-        )
+        candidates = supplier_df[
+            (supplier_df["product"] == product) &
+            (supplier_df["available_stock"] >= qty + reserved_stock[(product, "$ANY")])
+        ]
 
-        if not supplier_doc:
-            logger.info(f"No supplier stock available for {product}")
+        if candidates.empty:
             continue
 
-        supplier_id = supplier_doc["supplier_id"]
-        unit_cost = float(supplier_doc["supplier_cost"])
+        supplier_row = candidates.iloc[0]
+        supplier_id = supplier_row.supplier_id
+        unit_cost = float(supplier_row.supplier_cost)
         cost = round(qty * unit_cost, 2)
 
-        # --------------------------------
-        # BUDGET CHECKS
-        # --------------------------------
         if total_spent + cost > CYCLE_BUDGET:
-            logger.info(f"Skip {product}: cycle budget exceeded")
             continue
 
         if priority_spend[priority] + cost > PRIORITY_BUDGETS[priority]:
-            logger.info(f"Skip {product}: priority {priority} budget exceeded")
             continue
 
         if supplier_spend[supplier_id] + cost > (
             MONTHLY_BUDGET * config["supplier_budget_split"][supplier_id]
         ):
-            logger.info(f"Skip {product}: supplier budget exceeded")
             continue
 
-        # --------------------------------
-        # APPROVAL
-        # --------------------------------
-        logger.info(
-            f"APPROVED {product} → {supplier_id} "
-            f"₹{unit_cost} x {qty}"
-        )
+        # APPROVED LOG REMOVED FOR SPEED
+        # logger.info(f"APPROVED {product} → {supplier_id} ₹{unit_cost} x {qty}")
 
         reserved_stock[(product, "$ANY")] += qty
         total_spent += cost
@@ -227,11 +219,11 @@ def run_agent(config: Optional[dict] = None) -> dict:
 
         decisions.append({
             "product": product,
-            "category": row.get("category"),
+            "category": getattr(row, "category", None),
             "supplier_id": supplier_id,
             "priority": priority,
-            "predicted_7d_demand": int(row["predicted_7d_demand"]),
-            "current_stock": int(row["current_stock"]),
+            "predicted_7d_demand": int(row.predicted_7d_demand),
+            "current_stock": int(row.current_stock),
             "restock_quantity": qty,
             "supplier_cost_per_unit": unit_cost,
             "total_cost": cost,
