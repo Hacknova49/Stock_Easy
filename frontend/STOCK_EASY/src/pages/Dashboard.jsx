@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, AreaChart, Area
 } from "recharts";
 import {
   LayoutDashboard, ShoppingCart, BarChart2, MessageSquare, Globe, Users, Settings, Bell, LogOut,
-  ChevronDown, Search, Activity, MoreHorizontal, ArrowUpRight, ArrowDownRight, Wallet, Package, Menu, TrendingUp
+  ChevronDown, Search, Activity, MoreHorizontal, ArrowUpRight, ArrowDownRight, Wallet, Package, Menu, TrendingUp, X
 } from "lucide-react";
 import "./Dashboard.css";
 
@@ -22,70 +22,6 @@ const COLORS = {
   purple: "#8b5cf6",
   cyan: "#06b6d4",
   chartColors: ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#06b6d4", "#ec4899"]
-};
-
-// --- Sub-Components ---
-
-const Sidebar = ({ isCollapsed, toggleCollapse, onNavigate }) => {
-  const navigate = useNavigate();
-  const [activeItem, setActiveItem] = useState('Analytics');
-
-  const handleNav = (label, path, sectionId) => {
-    setActiveItem(label);
-    if (path) {
-      navigate(path);
-    } else if (sectionId) {
-      onNavigate(sectionId);
-    }
-  };
-
-  return (
-    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-      <div className="sidebar-logo">
-        <div className="logo-icon" onClick={toggleCollapse} style={{ cursor: 'pointer' }}>
-          <LayoutDashboard size={20} />
-        </div>
-        {!isCollapsed && <span>Develop</span>}
-      </div>
-
-
-      <div className="nav-links">
-        <div
-          className={`nav-item ${activeItem === 'Dashboard' ? 'active' : ''}`}
-          onClick={() => handleNav('Dashboard', '/dashboard')}
-          title="Dashboard"
-        >
-          <Activity size={20} />
-          {!isCollapsed && <span>Dashboard</span>}
-        </div>
-
-        {/* Wallet Removed */}
-
-        <div
-          className={`nav-item ${activeItem === 'Landing' ? 'active' : ''}`}
-          onClick={() => handleNav('Landing', '/')}
-          title="Landing Page"
-        >
-          <Globe size={20} />
-          {!isCollapsed && <span>Landing Page</span>}
-        </div>
-
-        <div
-          className={`nav-item ${activeItem === 'Control Panel' ? 'active' : ''}`}
-          onClick={() => handleNav('Control Panel', '/control-panel')}
-          title="Control Panel"
-        >
-          <Settings size={20} />
-          {!isCollapsed && <span>Control Panel</span>}
-        </div>
-      </div>
-
-
-      <div className="nav-bottom">
-        {/* Settings and Exit removed as requested */}
-      </div>
-    </aside>
-  );
 };
 
 const StatCard = ({ title, value, subtext, icon: Icon, color }) => (
@@ -172,7 +108,7 @@ function Dashboard() {
   const [config, setConfig] = useState(null); // Add config state
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAllDecisions, setShowAllDecisions] = useState(false);
 
   // Refs for scrolling
@@ -225,8 +161,6 @@ function Dashboard() {
     fetchConfig(); // Also fetch config on mount
   }, [fetchAgentData, fetchConfig]);
 
-  const toggleSidebar = () => setIsSidebarCollapsed(!isSidebarCollapsed);
-
   const chartData = useMemo(() => {
     if (!data) return null;
 
@@ -276,14 +210,38 @@ function Dashboard() {
   }
 
   return (
-    <div className="dashboard-container">
-      <Sidebar
-        isCollapsed={isSidebarCollapsed}
-        toggleCollapse={toggleSidebar}
-        onNavigate={scrollToSection}
-      />
+    <div className={`dashboard-container ${mobileMenuOpen ? 'menu-open' : ''}`}>
+      {/* Top Navigation Bar */}
+      <nav className="dashboard-nav">
+        <div className="dashboard-nav-brand">
+          <Link to="/" className="dashboard-brand-name">StockEasy</Link>
+        </div>
 
-      <main className={`main-content ${isSidebarCollapsed ? 'expanded' : ''}`}>
+        {/* Desktop Navigation Links */}
+        <div className="dashboard-nav-links">
+          <Link to="/" className="dashboard-nav-link">Home</Link>
+          <Link to="/dashboard" className="dashboard-nav-link active">Dashboard</Link>
+          <Link to="/control-panel" className="dashboard-nav-link">Control Panel</Link>
+        </div>
+
+        <div className="dashboard-nav-actions">
+          {/* Mobile Menu Toggle */}
+          <button className="dashboard-mobile-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu Overlay */}
+        <div className={`dashboard-mobile-menu ${mobileMenuOpen ? 'active' : ''}`}>
+          <div className="dashboard-mobile-nav-links">
+            <Link to="/" className="dashboard-mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+            <Link to="/dashboard" className="dashboard-mobile-nav-link active" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+            <Link to="/control-panel" className="dashboard-mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>Control Panel</Link>
+          </div>
+        </div>
+      </nav>
+
+      <main className="main-content">
         {/* Header */}
         <header className="top-header">
           <div className="welcome-text">
