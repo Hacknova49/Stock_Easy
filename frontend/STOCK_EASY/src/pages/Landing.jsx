@@ -159,7 +159,7 @@ function Landing() {
             </p>
             <div className="plan-price">
               <span className="currency">₹</span>
-              <span className="amount">50</span>
+              <span className="amount">500</span>
               <span className="period">/month</span>
             </div>
             <Link to="/homepage" className="plan-cta">Buy now</Link>
@@ -177,7 +177,7 @@ function Landing() {
             </p>
             <div className="plan-price">
               <span className="currency">₹</span>
-              <span className="amount">60</span>
+              <span className="amount">2000</span>
               <span className="period">/month</span>
             </div>
             <Link to="/homepage" className="plan-cta">Buy now</Link>
@@ -196,7 +196,7 @@ function Landing() {
             </p>
             <div className="plan-price">
               <span className="currency">₹</span>
-              <span className="amount">12</span>
+              <span className="amount">6000</span>
               <span className="period">/month</span>
             </div>
             <Link to="/homepage" className="plan-cta">Buy now</Link>
@@ -223,11 +223,7 @@ function Landing() {
         <div className="about-content">
           <h2 className="about-title">A people-first approach<br />to inventory management</h2>
           <p className="about-description">
-            Your inventory challenges are our challenges, and your goals are our
-            priority. We're here to help you design the right solution to drive
-            business growth and set up custom fee profiles to optimize payment
-            pathways. StockEasy support team is also available 24/7 to address
-            emergencies.
+            StockEasy is a people-first, AI-powered inventory management system designed for real businesses. It automatically monitors stock levels, selects the best suppliers, enforces budgets and safety rules, and executes restocking decisions with full transparency and control. By combining autonomous AI agents with human-defined limits, StockEasy reduces manual effort, prevents overspending, and keeps inventory running smoothly—showcasing responsible, real-world agentic AI built for growth and trust.
           </p>
           <Link to="/control-panel" className="btn-outline">Get Started</Link>
         </div>
