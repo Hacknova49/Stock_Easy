@@ -850,12 +850,46 @@ body {
     .main-content {
         padding: 1.5rem;
     }
+
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .chart-section-large {
+        grid-column: span 2;
+        min-height: 350px;
+    }
+
+    .side-charts-col {
+        grid-column: span 2;
+        flex-direction: row;
+    }
+
+    .bottom-section-wide {
+        grid-column: span 2;
+    }
+
+    .bottom-side-col {
+        grid-column: span 2;
+    }
+
+    .summary-card {
+        grid-column: span 1;
+    }
+
+    .welcome-text h1 {
+        font-size: 1.5rem;
+    }
+
+    .welcome-text p {
+        font-size: 0.85rem;
+    }
 }
 
-/* Responsive Styles */
+/* Mobile Styles */
 @media (max-width: 768px) {
     .dashboard-nav {
-        padding: 1rem;
+        padding: 0.75rem 1rem;
     }
 
     .dashboard-brand-name {
@@ -867,30 +901,19 @@ body {
         width: 100%;
     }
 
-    .dashboard-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .chart-section-large,
-    .side-charts-col,
-    .bottom-section-wide,
-    .bottom-side-col,
-    .summary-card {
-        width: 100%;
-    }
-
-    .side-charts-col {
-        flex-direction: column;
-    }
-
     .top-header {
-        flex-direction: row;
-        /* Align hamburger and welcome */
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .welcome-text h1 {
+        font-size: 1.35rem;
+    }
+
+    .welcome-text p {
+        font-size: 0.8rem;
     }
 
     .header-actions {
@@ -899,16 +922,193 @@ body {
         align-items: stretch;
     }
 
-    .search-bar {
-        width: 100%;
+    /* Mobile Grid - Single Column */
+    .dashboard-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
     }
 
-    .user-profile {
-        justify-content: space-between;
+    /* Stat Cards - 2x2 on mobile */
+    .summary-card {
+        width: 100%;
+        height: auto;
+        min-height: 120px;
+        padding: 1rem;
+    }
+
+    .summary-value {
+        font-size: 1.5rem;
+    }
+
+    /* Charts */
+    .chart-section-large,
+    .side-charts-col,
+    .bottom-section-wide,
+    .bottom-side-col {
+        width: 100%;
+        min-height: auto;
+    }
+
+    .chart-section-large {
+        min-height: 300px;
+    }
+
+    .side-charts-col {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .small-chart-card {
+        min-height: 280px;
+    }
+
+    .bottom-section-wide {
+        min-height: auto;
+    }
+
+    .bottom-side-col {
+        min-height: 280px;
+    }
+
+    /* Chart container responsive */
+    .chart-container-responsive {
+        min-height: 280px;
+    }
+
+    /* Cards */
+    .card {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+
+    /* Transaction items */
+    .transaction-item {
+        padding: 0.75rem 0;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .t-icon {
+        width: 35px;
+        height: 35px;
+        margin-right: 0.75rem;
+    }
+
+    .t-name {
+        font-size: 0.9rem;
+    }
+
+    .t-date {
+        font-size: 0.75rem;
+    }
+
+    .t-amount {
+        font-size: 0.9rem;
+    }
+
+    /* Status rows */
+    .status-row {
+        padding: 0.5rem;
+    }
+}
+
+/* Small Mobile Styles */
+@media (max-width: 480px) {
+    .dashboard-nav {
+        padding: 0.6rem 0.75rem;
+    }
+
+    .dashboard-brand-name {
+        font-size: 1.1rem;
+    }
+
+    .main-content {
+        padding: 0.75rem;
+    }
+
+    .top-header {
+        margin-bottom: 1rem;
+    }
+
+    .welcome-text h1 {
+        font-size: 1.2rem;
+    }
+
+    .welcome-text p {
+        font-size: 0.75rem;
+    }
+
+    .dashboard-grid {
+        gap: 0.75rem;
+    }
+
+    .summary-card {
+        min-height: 100px;
+        padding: 0.75rem;
+    }
+
+    .summary-header {
+        font-size: 0.8rem;
+    }
+
+    .summary-value {
+        font-size: 1.25rem;
+    }
+
+    .chart-section-large {
+        min-height: 250px;
+    }
+
+    .small-chart-card {
+        min-height: 250px;
+    }
+
+    .card {
+        padding: 0.75rem;
+    }
+
+    /* Smaller mobile menu links */
+    .dashboard-mobile-nav-link {
+        font-size: 1.25rem;
+    }
+
+    /* Transaction items compact */
+    .transaction-item {
+        padding: 0.5rem 0;
+    }
+
+    .t-icon {
+        width: 32px;
+        height: 32px;
+        margin-right: 0.5rem;
+    }
+
+    .t-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .t-name {
+        font-size: 0.85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
 .hide-scrollbar::-webkit-scrollbar {
     display: none;
+}
+
+/* Ensure main content has proper z-index */
+.main-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Mobile menu z-index fix */
+.dashboard-mobile-menu-btn {
+    z-index: 101;
 }
