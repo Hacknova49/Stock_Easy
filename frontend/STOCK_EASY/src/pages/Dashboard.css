@@ -977,10 +977,14 @@ body {
     .bottom-side-col {
         width: 100%;
         min-height: auto;
+        display: block;
+        grid-column: unset;
     }
 
     .chart-section-large {
         min-height: 300px;
+        display: flex;
+        flex-direction: column;
     }
 
     .side-charts-col {
@@ -1000,9 +1004,11 @@ body {
         min-height: 280px;
     }
 
-    /* Chart container responsive */
+    /* Chart container responsive - explicit height required for Recharts */
     .chart-container-responsive {
         min-height: 280px;
+        height: 280px;
+        width: 100%;
     }
 
     /* Cards */
