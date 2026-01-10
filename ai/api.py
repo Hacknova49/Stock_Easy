@@ -100,7 +100,7 @@ def startup():
             "critical": int((df["current_stock"] <= 5).sum()),
         }
 
-    scheduler.add_job(auto_run, "interval", minutes=1)
+    scheduler.add_job(auto_run, "interval", minutes=1000)
     scheduler.start()
     print("🟢 Scheduler started")
 
