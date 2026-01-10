@@ -9,6 +9,158 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+/* ========== CONTROL PANEL NAVBAR ========== */
+.cp-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background: rgba(10, 18, 12, 0.95);
+    border-bottom: 1px solid rgba(74, 222, 128, 0.1);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.cp-nav-brand {
+    display: flex;
+    align-items: center;
+}
+
+.cp-brand-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.cp-brand-name:hover {
+    color: #4ade80;
+}
+
+.cp-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.cp-nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.5rem 0;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.cp-nav-link:hover {
+    color: #ffffff;
+}
+
+.cp-nav-link.active {
+    color: #4ade80;
+}
+
+.cp-nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #4ade80;
+    transition: width 0.3s ease;
+}
+
+.cp-nav-link:hover::after,
+.cp-nav-link.active::after {
+    width: 100%;
+}
+
+.cp-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cp-save-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.25rem;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cp-save-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+}
+
+.cp-mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.cp-mobile-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(10, 18, 12, 0.98);
+    backdrop-filter: blur(20px);
+    z-index: 99;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.cp-mobile-menu.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.cp-mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.cp-mobile-nav-link {
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.cp-mobile-nav-link:hover {
+    color: #4ade80;
+    transform: scale(1.05);
+}
+
+.cp-mobile-nav-link.active {
+    color: #4ade80;
+}
+
 /* ========== LEFT SIDEBAR ========== */
 .cp-sidebar {
     background: rgba(10, 18, 12, 0.95);
@@ -1711,4 +1863,71 @@
     .page-title {
         font-size: 1.4rem;
     }
+}
+/* Navbar Responsive */
+@media (max-width: 1024px) {
+    .cp-nav-links { display: none; }
+    .cp-mobile-menu-btn { display: block; }
+    .inventory-intelligence-section, .supplier-section, .budget-section { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+    .cp-nav { padding: 1rem; }
+    .cp-save-btn .btn-text { display: none; }
+    .main-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+    .priority-split-row, .budget-split-row { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+    .priority-slider-card, .supplier-slider { width: 100%; }
+    .budget-content { flex-direction: column; gap: 1rem; }
+}
+@media (max-width: 480px) {
+    .cp-nav { padding: 0.75rem 1rem; }
+    .cp-brand-name { font-size: 1.25rem; }
+    .breadcrumb { font-size: 0.75rem; }
+    .date-badge { display: none; }
+}
+
+/* ========== ENHANCED MOBILE RESPONSIVE ========== */
+@media (max-width: 768px) {
+    .cp-main { padding: 1rem; }
+    .config-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .config-row label { width: 100%; }
+    .config-input-group { width: 100%; }
+    .config-input-group input { width: 100%; }
+    .supplier-address { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+    .donut-chart { width: 120px; height: 120px; margin: 0 auto; }
+    .mini-stat-card { padding: 0.75rem; }
+    .mini-value { font-size: 1rem; }
+}
+@media (max-width: 480px) {
+    .cp-main { padding: 0.75rem; }
+    .stats-row { grid-template-columns: 1fr; gap: 0.75rem; }
+    .stat-card { padding: 0.875rem; }
+    .stat-value { font-size: 1.1rem; }
+    .config-card { padding: 0.875rem; }
+    .config-desc { font-size: 0.8rem; }
+    .supplier-info { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+    .supplier-avatar { width: 30px; height: 30px; font-size: 0.75rem; }
+    .supplier-address { max-width: 100px; font-size: 0.7rem; }
+    .supplier-table th, .supplier-table td { padding: 0.6rem 0.4rem; font-size: 0.8rem; }
+    .status-badge { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
+}
+
+/* ========== CRITICAL MOBILE FIXES ========== */
+@media (max-width: 768px) {
+    .cp-dashboard .main-content { margin-left: 0 !important; margin-right: 0 !important; padding: 0 0.5rem !important; }
+    .cp-main { padding: 0.75rem !important; overflow-x: hidden; }
+    .main-header { padding: 0; }
+    .inventory-intelligence-section { padding: 0; }
+    .config-card { margin: 0; width: 100%; box-sizing: border-box; }
+    .page-title { font-size: 1.5rem; word-wrap: break-word; }
+}
+@media (max-width: 480px) {
+    .cp-dashboard .main-content { padding: 0 !important; margin: 0 !important; }
+    .cp-main { padding: 0.5rem !important; }
+    .inventory-intelligence-section, .supplier-section, .budget-section { gap: 0.75rem; padding: 0; }
+    .config-card { padding: 0.75rem; border-radius: 12px; }
+    .config-card-header { gap: 0.5rem; }
+    .config-card-header h3 { font-size: 0.9rem; }
+    .mini-stats { gap: 0.5rem; }
+    .mini-stat-card { padding: 0.75rem; }
+    .page-title { font-size: 1.25rem; margin-bottom: 0.75rem; }
 }

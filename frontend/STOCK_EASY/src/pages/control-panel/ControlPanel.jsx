@@ -24,7 +24,9 @@ import {
     Zap,
     Home,
     PanelLeftClose,
-    PanelLeft
+    PanelLeft,
+    Menu,
+    X
 } from "lucide-react";
 import "./controlPanel.css";
 
@@ -74,6 +76,7 @@ const mockActivities = [
 function ControlPanel() {
     const [config, setConfig] = useState(defaultConfig);
     const [editingSupplier, setEditingSupplier] = useState(null);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         async function loadConfig() {
@@ -194,7 +197,42 @@ function ControlPanel() {
     const activeSuppliers = config.suppliers.filter(s => s.status === "Allowed").length;
 
     return (
-        <div className="cp-dashboard">
+        <div className={`cp-dashboard ${mobileMenuOpen ? 'menu-open' : ''}`}>
+            {/* Navigation Bar */}
+            <nav className="cp-nav">
+                <div className="cp-nav-brand">
+                    <Link to="/" className="cp-brand-name">StockEasy</Link>
+                </div>
+
+                {/* Desktop Navigation Links */}
+                <div className="cp-nav-links">
+                    <Link to="/" className="cp-nav-link">Home</Link>
+                    <Link to="/dashboard" className="cp-nav-link">Dashboard</Link>
+                    <Link to="/control-panel" className="cp-nav-link active">Control Panel</Link>
+                </div>
+
+                <div className="cp-nav-actions">
+                    <button className="cp-save-btn" onClick={saveConfigToBackend}>
+                        <Save size={16} />
+                        <span className="btn-text">Save</span>
+                    </button>
+
+                    {/* Mobile Menu Toggle */}
+                    <button className="cp-mobile-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                        {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                </div>
+
+                {/* Mobile Menu Overlay */}
+                <div className={`cp-mobile-menu ${mobileMenuOpen ? 'active' : ''}`}>
+                    <div className="cp-mobile-nav-links">
+                        <Link to="/" className="cp-mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+                        <Link to="/dashboard" className="cp-mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+                        <Link to="/control-panel" className="cp-mobile-nav-link active" onClick={() => setMobileMenuOpen(false)}>Control Panel</Link>
+                    </div>
+                </div>
+            </nav>
+
             {/* Main Content */}
             <main className="cp-main">
                 <header className="main-header">
