@@ -108,6 +108,7 @@ const ChartCard = ({ title, children, className, actionElement, style }) => (
 function Dashboard() {
   const [data, setData] = useState(null);
   const [config, setConfig] = useState(null); // Add config state
+  const [dashboardStats, setDashboardStats] = useState(null); // Actual budget usage
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -131,18 +132,28 @@ function Dashboard() {
     }
   };
 
-  // Fetch configuration from Control Panel
+  // Fetch configuration from Control Panel and dashboard stats
   const fetchConfig = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/agent/config`);
-      if (res.ok) {
-        const json = await res.json();
+      // Fetch config
+      const configRes = await fetch(`${API_BASE_URL}/api/agent/config`);
+      if (configRes.ok) {
+        const json = await configRes.json();
         if (json?.config) {
           setConfig(json.config);
         }
       }
+
+      // Fetch actual budget stats (real spent amount)
+      const statsRes = await fetch(`${API_BASE_URL}/api/dashboard/stats`);
+      if (statsRes.ok) {
+        const statsJson = await statsRes.json();
+        if (statsJson?.aiStatus) {
+          setDashboardStats(statsJson.aiStatus);
+        }
+      }
     } catch (err) {
-      console.warn("Could not fetch config:", err);
+      console.warn("Could not fetch config/stats:", err);
     }
   }, []);
 
@@ -273,15 +284,15 @@ function Dashboard() {
           <div id="wallet-section" style={{ display: 'contents' }}>
             <StatCard
               title="Total Budget"
-              value={`₹${(config?.monthlyBudget || data.monthly_budget || 0).toLocaleString()}`}
+              value={`₹${(dashboardStats?.monthlyBudget || config?.monthlyBudget || data.monthly_budget || 0).toLocaleString()}`}
             />
             <StatCard
               title="Total Spent"
-              value={`₹${(data.total_spent || 0).toLocaleString()}`}
+              value={`₹${(dashboardStats?.budgetUsed || 0).toLocaleString()}`}
             />
             <StatCard
               title="Remaining"
-              value={`₹${((config?.monthlyBudget || data.monthly_budget || 0) - (data.total_spent || 0)).toLocaleString()}`}
+              value={`₹${(dashboardStats?.budgetRemaining || (config?.monthlyBudget || data.monthly_budget || 0)).toLocaleString()}`}
             />
             <ActiveStatusCard data={data} config={config} />
           </div>
