@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import "./controlPanel.css";
 
-const API_BASE_URL = "https://stockeasy-backend-qi9b.onrender.com";
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 // Default configuration
 const defaultConfig = {
@@ -40,6 +40,10 @@ const defaultConfig = {
     bufferStock: 7,
     minDemand: 5,
     restockBudgetLimit: 25,
+    autoRunDays: 0,
+    autoRunMins: 1000,
+    autoRunSecs: 0,
+    whatsappNumber: "",
     prioritySplit: {
         high: 50,
         medium: 30,
@@ -182,10 +186,10 @@ function ControlPanel() {
                 body: JSON.stringify(config)
             });
             if (!res.ok) throw new Error("Failed to save config");
-            alert("Configuration saved successfully");
+            alert("Configuration saved successfully! ✅");
         } catch (err) {
-            console.error(err);
-            alert("Error saving configuration");
+            console.error("Connection Error:", err);
+            alert("❌ Cannot reach backend! Please ensure 'python -m uvicorn ai.api:app --reload' is running in your terminal.");
         }
     };
 
@@ -300,6 +304,55 @@ function ControlPanel() {
                                             min="0"
                                         />
                                     </div>
+                                </div>
+                                <div className="config-row">
+                                    <label>Auto-run Interval:</label>
+                                    <div className="config-interval-group" style={{ display: 'flex', gap: '8px' }}>
+                                        <div className="config-input-group" style={{ flex: 1 }}>
+                                            <input
+                                                type="number"
+                                                value={config.autoRunDays}
+                                                onChange={(e) => handleNumberInput('autoRunDays', e.target.value)}
+                                                min="0"
+                                                placeholder="Days"
+                                            />
+                                            <span className="config-unit">d</span>
+                                        </div>
+                                        <div className="config-input-group" style={{ flex: 1 }}>
+                                            <input
+                                                type="number"
+                                                value={config.autoRunMins}
+                                                onChange={(e) => handleNumberInput('autoRunMins', e.target.value)}
+                                                min="0"
+                                                placeholder="Mins"
+                                            />
+                                            <span className="config-unit">m</span>
+                                        </div>
+                                        <div className="config-input-group" style={{ flex: 1 }}>
+                                            <input
+                                                type="number"
+                                                value={config.autoRunSecs}
+                                                onChange={(e) => handleNumberInput('autoRunSecs', e.target.value)}
+                                                min="0"
+                                                placeholder="Secs"
+                                            />
+                                            <span className="config-unit">s</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="config-row">
+                                    <label>WhatsApp Number:</label>
+                                    <div className="config-input-group">
+                                        <input
+                                            type="text"
+                                            placeholder="+1234567890"
+                                            value={config.whatsappNumber}
+                                            onChange={(e) => setConfig({ ...config, whatsappNumber: e.target.value })}
+                                        />
+                                    </div>
+                                    <p className="config-sub-desc" style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>
+                                        Join code: <strong>join begun-powder</strong> to +1 415 523 8886
+                                    </p>
                                 </div>
                             </div>
                         </div>

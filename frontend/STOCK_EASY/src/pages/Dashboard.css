@@ -393,17 +393,20 @@ body {
     }
 }
 
-@keyframes glowPulse {
+@keyframes pulse {
     0% {
-        box-shadow: 0 0 5px rgba(16, 185, 129, 0.2);
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
     }
 
-    50% {
-        box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
     }
 
     100% {
-        box-shadow: 0 0 5px rgba(74, 222, 128, 0.2);
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
     }
 }
 

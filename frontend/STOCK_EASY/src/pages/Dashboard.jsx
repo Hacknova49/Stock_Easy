@@ -11,7 +11,7 @@ import {
 import "./Dashboard.css";
 
 // API Config
-const API_BASE_URL = "https://stockeasy-backend-qi9b.onrender.com";
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 // Theme Colors
 const COLORS = {
@@ -157,9 +157,9 @@ function Dashboard() {
     }
   }, []);
 
-  const fetchAgentData = useCallback(async () => {
+  const fetchAgentData = useCallback(async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       setError(null);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -175,13 +175,37 @@ function Dashboard() {
         setError(err.message);
       }
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchAgentData();
-    fetchConfig(); // Also fetch config on mount
+    fetchAgentData(true); // Initial load with spinner
+    fetchConfig();
+
+    // 📡 WebSocket for Instant Updates (Professional Feel)
+    // WS base: change http -> ws
+    const wsUrl = API_BASE_URL.replace("http", "ws") + "/ws";
+    const socket = new WebSocket(wsUrl);
+
+    socket.onmessage = (event) => {
+      if (event.data === "refresh_dashboard") {
+        console.log("🚀 Real-time update received!");
+        fetchAgentData(false); // Update without flashing
+        fetchConfig();
+      }
+    };
+
+    // 🔄 Slower Fallback Polling (60 seconds)
+    const pollInterval = setInterval(() => {
+      fetchAgentData(false);
+      fetchConfig();
+    }, 60000);
+
+    return () => {
+      clearInterval(pollInterval);
+      socket.close();
+    };
   }, [fetchAgentData, fetchConfig]);
 
   const chartData = useMemo(() => {
@@ -207,7 +231,9 @@ function Dashboard() {
       demand: d.predicted_7d_demand
     }));
 
-    const budgetPercent = ((data.total_spent / data.monthly_budget) * 100).toFixed(1);
+    const budgetUsed = dashboardStats?.budgetUsed || 0;
+    const monthlyBudget = dashboardStats?.monthlyBudget || config?.monthlyBudget || data.monthly_budget || 0;
+    const budgetPercent = ((budgetUsed / monthlyBudget) * 100).toFixed(1);
 
     // Priority distribution
     const priorityMap = { 1: 0, 2: 0, 3: 0 };
@@ -268,7 +294,32 @@ function Dashboard() {
         {/* Header */}
         <header className="top-header">
           <div className="welcome-text">
-            <h1>Welcome back</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <h1>Welcome back</h1>
+              <div className="live-indicator-badge" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                background: 'rgba(16, 185, 129, 0.1)',
+                color: '#10b981',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+                marginTop: '4px'
+              }}>
+                <div style={{
+                  width: '6px',
+                  height: '6px',
+                  background: '#10b981',
+                  borderRadius: '50%',
+                  boxShadow: '0 0 8px #10b981',
+                  animation: 'pulse 2s infinite'
+                }}></div>
+                LIVE
+              </div>
+            </div>
             <p>Here is your inventory overview for today</p>
           </div>
 
@@ -292,7 +343,7 @@ function Dashboard() {
             />
             <StatCard
               title="Remaining"
-              value={`₹${(dashboardStats?.budgetRemaining || (config?.monthlyBudget || data.monthly_budget || 0)).toLocaleString()}`}
+              value={`₹${(dashboardStats?.budgetRemaining || ((dashboardStats?.monthlyBudget || config?.monthlyBudget || data.monthly_budget || 0) - (dashboardStats?.budgetUsed || 0))).toLocaleString()}`}
             />
             <ActiveStatusCard data={data} config={config} />
           </div>
