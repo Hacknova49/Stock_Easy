@@ -97,7 +97,7 @@ const ChartCard = ({ title, children, className, actionElement, style }) => (
         </div>
       )}
     </div>
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div className="chart-card-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '250px' }}>
       {children}
     </div>
   </div>
@@ -112,6 +112,16 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAllDecisions, setShowAllDecisions] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
+  // Track window size for responsive chart height
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = windowWidth < 768;
 
   // Refs for scrolling
   const scrollToSection = (id) => {
@@ -280,12 +290,21 @@ function Dashboard() {
           <div id="analytics-section" style={{ display: 'contents' }}>
             {/* Main Bar Chart (Category Restock) */}
             <ChartCard title="Restock by Category (Quantity)" className="chart-section-large">
-              <div className="chart-container-responsive" style={{ width: '100%', flex: 1, minHeight: '280px' }}>
+              <div className="chart-container-responsive" style={{ width: '100%', height: isMobile ? 220 : 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData.categoryData} barSize={40}>
+                  <BarChart data={chartData.categoryData} barSize={isMobile ? 24 : 40}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#6b7280', fontSize: isMobile ? 10 : 12 }}
+                      dy={10}
+                      interval={0}
+                      angle={isMobile ? -45 : 0}
+                      textAnchor={isMobile ? 'end' : 'middle'}
+                    />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: isMobile ? 10 : 12 }} width={isMobile ? 30 : 40} />
                     <Tooltip
                       contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }}
                       itemStyle={{ color: '#fff' }}

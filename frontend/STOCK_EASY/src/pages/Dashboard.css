@@ -1006,9 +1006,36 @@ body {
 
     /* Chart container responsive - explicit height required for Recharts */
     .chart-container-responsive {
-        min-height: 280px;
+        min-height: 220px;
+        width: 100% !important;
+        flex: none !important;
+        overflow: visible;
+        position: relative;
+    }
+
+    /* Ensure ResponsiveContainer wrapper has dimensions */
+    .chart-container-responsive>.recharts-responsive-container {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    /* Ensure chart-section-large has proper height */
+    .chart-section-large {
+        min-height: 350px !important;
+        height: auto;
+    }
+
+    /* Chart card content wrapper needs explicit height */
+    .chart-card-content {
+        min-height: 280px !important;
         height: 280px;
-        width: 100%;
+        position: relative;
+    }
+
+    /* Ensure the BarChart has proper height context */
+    .chart-section-large .chart-container-responsive {
+        position: relative;
+        display: block;
     }
 
     /* Cards */
