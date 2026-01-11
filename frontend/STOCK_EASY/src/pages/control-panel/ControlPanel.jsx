@@ -30,7 +30,8 @@ import {
 } from "lucide-react";
 import "./controlPanel.css";
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "https://stockeasy-backend-qi9b.onrender.com";
+const rawUrl = import.meta.env.VITE_BACKEND_URL || "https://stockeasy-backend-qi9b.onrender.com";
+const API_BASE_URL = rawUrl.replace(/\/$/, "");
 
 // Default configuration
 const defaultConfig = {

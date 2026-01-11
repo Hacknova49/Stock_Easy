@@ -11,7 +11,8 @@ import {
 import "./Dashboard.css";
 
 // API Config
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "https://stockeasy-backend-qi9b.onrender.com";
+const rawUrl = import.meta.env.VITE_BACKEND_URL || "https://stockeasy-backend-qi9b.onrender.com";
+const API_BASE_URL = rawUrl.replace(/\/$/, ""); // Strip trailing slash
 
 // Theme Colors
 const COLORS = {
@@ -184,8 +185,19 @@ function Dashboard() {
     fetchConfig();
 
     // 📡 WebSocket for Instant Updates (Professional Feel)
-    // WS base: change http -> ws
-    const wsUrl = API_BASE_URL.replace("http", "ws") + "/ws";
+    const getWsUrl = (baseUrl) => {
+      try {
+        const url = new URL(baseUrl);
+        url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+        url.pathname = url.pathname.replace(/\/$/, "") + "/ws";
+        return url.toString();
+      } catch (e) {
+        return baseUrl.replace("http", "ws") + "/ws";
+      }
+    };
+
+    const wsUrl = getWsUrl(API_BASE_URL);
+    console.log("🔌 Attempting WebSocket connection to:", wsUrl);
     const socket = new WebSocket(wsUrl);
 
     socket.onmessage = (event) => {
@@ -250,13 +262,48 @@ function Dashboard() {
     return { supplierData, categoryData, stockDemandData, budgetPercent, priorityData };
   }, [data]);
 
-  if (loading || !data) {
+  if (loading && !data) {
     return (
       <div className="dashboard-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <div className="loading-spinner"></div>
       </div>
     );
   }
+
+  if (error && !data) {
+    return (
+      <div className="dashboard-container" style={{ alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2rem' }}>
+        <div className="card" style={{ maxWidth: '500px', padding: '2rem' }}>
+          <AlertTriangle size={48} color="#ef4444" style={{ marginBottom: '1rem' }} />
+          <h2 style={{ color: 'white', marginBottom: '1rem' }}>Connection Error</h2>
+          <p style={{ color: '#9ca3af', marginBottom: '1.5rem' }}>
+            Could not connect to the backend engine at:<br />
+            <code style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 4px', borderRadius: '4px', display: 'inline-block', marginTop: '0.5rem' }}>{API_BASE_URL}</code>
+          </p>
+          <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            {error}
+          </div>
+          <button
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              fetchAgentData(true);
+              fetchConfig();
+            }}
+            className="cp-save-btn"
+            style={{ width: '100%', justifyContent: 'center' }}
+          >
+            Retry Connection
+          </button>
+          <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '1rem' }}>
+            If this persists, ensures your backend is running and the URL is correct in your environment variables.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) return null;
 
   return (
     <div className={`dashboard-container ${mobileMenuOpen ? 'menu-open' : ''}`}>
