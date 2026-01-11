@@ -112,6 +112,7 @@ function Dashboard() {
   const [dashboardStats, setDashboardStats] = useState(null); // Actual budget usage
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState("Initializing StockEasy Engine...");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAllDecisions, setShowAllDecisions] = useState(false);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -120,8 +121,24 @@ function Dashboard() {
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+
+    // Dynamic Loading Messages for Render Cold Starts
+    let loadingTimer1, loadingTimer2;
+    if (loading) {
+      loadingTimer1 = setTimeout(() => {
+        setLoadingMessage("Waking up backend (Render Free Tier can take ~50s)...");
+      }, 5000);
+      loadingTimer2 = setTimeout(() => {
+        setLoadingMessage("Almost there! Optimizing inventory models...");
+      }, 30000);
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(loadingTimer1);
+      clearTimeout(loadingTimer2);
+    };
+  }, [loading]);
 
   const isMobile = windowWidth < 768;
 
@@ -264,8 +281,12 @@ function Dashboard() {
 
   if (loading && !data) {
     return (
-      <div className="dashboard-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
+      <div className="dashboard-container" style={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1.5rem' }}>
         <div className="loading-spinner"></div>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ color: 'white', fontSize: '1.1rem', fontWeight: 500, marginBottom: '0.5rem' }}>{loadingMessage}</p>
+          <p style={{ color: '#6b7280', fontSize: '0.85rem' }}>This might take a moment on the first visit.</p>
+        </div>
       </div>
     );
   }
