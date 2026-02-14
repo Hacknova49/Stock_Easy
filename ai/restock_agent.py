@@ -32,8 +32,9 @@ OWNER_INVENTORY = DATA_DIR / "inventory.csv"
 # ===============================
 MAX_ACTIVE_SKUS = 500
 
-INR_TO_POL_RATE = 10_000_000
+POL_TO_INR = 150_000
 POL_DECIMALS = 10**18
+TESTNET_POL_SCALE = 0.0001 # ⚡ Scaling down costs for Amoy testnet demo
 
 CYCLE_BUDGET_RATIO = 0.25
 
@@ -52,7 +53,9 @@ LAST_RESTOCK_AT: Optional[datetime] = None
 # UTILS
 # ===============================
 def inr_to_wei(inr: float) -> str:
-    return str(int((inr / INR_TO_POL_RATE) * POL_DECIMALS))
+    # Scale down by TESTNET_POL_SCALE to save POL on testnet
+    pol_amt = (inr / POL_TO_INR) * TESTNET_POL_SCALE
+    return str(int(pol_amt * POL_DECIMALS))
 
 
 def load_owner_inventory() -> pd.DataFrame:

@@ -1,14 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { LayoutDashboard, TrendingUp, Shield, HeadphonesIcon, BarChart3, Users, Zap, Check } from "lucide-react";
+import { LayoutDashboard, TrendingUp, Shield, HeadphonesIcon, BarChart3, Users, Zap, Check, Menu, X } from "lucide-react";
 import Squares from "../components/Squares";
 import Shuffle from "../components/Shuffle";
 import WorkflowAnimation from "../components/WorkflowAnimation";
 import "./Landing.css";
 
 function Landing() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
-    <div className="landing-page">
+    <div className={`landing-page ${isMenuOpen ? 'menu-open' : ''}`} style={{ scrollBehavior: 'smooth' }}>
       {/* Grid Background */}
       <div className="grid-background">
         <Squares
@@ -23,17 +29,39 @@ function Landing() {
       {/* Navigation */}
       <nav className="landing-nav">
         <div className="nav-brand">
-          <img src="/src/assets/stock easy photo.png" alt="StockEasy" className="brand-logo" />
           <span className="brand-name">StockEasy</span>
         </div>
-        <div className="nav-links">
-          <a href="#features" className="nav-link">Features</a>
-          <a href="#pricing" className="nav-link">Pricing</a>
-          <a href="#about" className="nav-link">About</a>
+
+        {/* Desktop Links */}
+        {/* Desktop Navigation - Centered */}
+        <div className="landing-nav-links">
+          <a href="#features" className="landing-nav-link">Features</a>
+          <a href="#pricing" className="landing-nav-link">Pricing</a>
+          <a href="#about" className="landing-nav-link">About</a>
+          <Link to="/dashboard" className="landing-nav-link">Dashboard</Link>
+          <Link to="/control-panel" className="landing-nav-link">Control Panel</Link>
         </div>
+
         <div className="nav-actions">
-          <Link to="/homepage" className="nav-signin">Sign In</Link>
-          <Link to="/homepage" className="nav-cta">Get Started</Link>
+          {/* Sign In Removed */}
+          <Link to="/control-panel" className="landing-nav-cta">Get Started</Link>
+
+          {/* Mobile Menu Toggle */}
+          <button className="mobile-menu-btn" onClick={toggleMenu} aria-label="Toggle menu">
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu Overlay */}
+        <div className={`mobile-menu-overlay ${isMenuOpen ? 'active' : ''}`}>
+          <div className="mobile-nav-links">
+            <a href="#features" className="mobile-nav-link" onClick={toggleMenu}>Features</a>
+            <a href="#pricing" className="mobile-nav-link" onClick={toggleMenu}>Pricing</a>
+            <a href="#about" className="mobile-nav-link" onClick={toggleMenu}>About</a>
+            <Link to="/dashboard" className="mobile-nav-link" onClick={toggleMenu}>Dashboard</Link>
+            <Link to="/control-panel" className="mobile-nav-link" onClick={toggleMenu}>Control Panel</Link>
+            <Link to="/get-started" className="mobile-nav-link highlight" onClick={toggleMenu}>Get Started</Link>
+          </div>
         </div>
       </nav>
 
@@ -60,11 +88,11 @@ function Landing() {
             Automated Payment Processing
           </p>
           <div className="hero-buttons">
-            <Link to="/homepage" className="btn-primary">
+            <Link to="/control-panel" className="btn-primary">
               <Zap size={18} />
               Start trial now
             </Link>
-            <button className="btn-secondary">Demo Video →</button>
+            <a href="https://drive.google.com/file/d/10bZdTYxfNd5ZLhjChRADZy-OaPW0dlhX/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="btn-secondary">Demo Video →</a>
           </div>
         </div>
 
@@ -131,7 +159,7 @@ function Landing() {
             </p>
             <div className="plan-price">
               <span className="currency">₹</span>
-              <span className="amount">50</span>
+              <span className="amount">500</span>
               <span className="period">/month</span>
             </div>
             <Link to="/homepage" className="plan-cta">Buy now</Link>
@@ -149,7 +177,7 @@ function Landing() {
             </p>
             <div className="plan-price">
               <span className="currency">₹</span>
-              <span className="amount">60</span>
+              <span className="amount">2000</span>
               <span className="period">/month</span>
             </div>
             <Link to="/homepage" className="plan-cta">Buy now</Link>
@@ -168,7 +196,7 @@ function Landing() {
             </p>
             <div className="plan-price">
               <span className="currency">₹</span>
-              <span className="amount">12</span>
+              <span className="amount">6000</span>
               <span className="period">/month</span>
             </div>
             <Link to="/homepage" className="plan-cta">Buy now</Link>
@@ -195,20 +223,15 @@ function Landing() {
         <div className="about-content">
           <h2 className="about-title">A people-first approach<br />to inventory management</h2>
           <p className="about-description">
-            Your inventory challenges are our challenges, and your goals are our
-            priority. We're here to help you design the right solution to drive
-            business growth and set up custom fee profiles to optimize payment
-            pathways. StockEasy support team is also available 24/7 to address
-            emergencies.
+            StockEasy is a people-first, AI-powered inventory management system designed for real businesses. It automatically monitors stock levels, selects the best suppliers, enforces budgets and safety rules, and executes restocking decisions with full transparency and control. By combining autonomous AI agents with human-defined limits, StockEasy reduces manual effort, prevents overspending, and keeps inventory running smoothly—showcasing responsible, real-world agentic AI built for growth and trust.
           </p>
-          <Link to="/homepage" className="btn-outline">More About Us</Link>
+          <Link to="/control-panel" className="btn-outline">Get Started</Link>
         </div>
       </section>
 
       {/* Newsletter Footer */}
       <footer className="landing-footer">
         <div className="footer-brand">
-          <img src="/src/assets/stock easy photo.png" alt="StockEasy" className="brand-logo" />
           <span className="brand-name">StockEasy</span>
         </div>
         <h3 className="footer-title">Sign up for the StockEasy Newsletter</h3>

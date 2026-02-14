@@ -31,23 +31,35 @@ USER_WHATSAPP_NUMBER = os.getenv("USER_WHATSAPP_NUMBER")
 # WHATSAPP NOTIFIER
 # ==================================================
 
-def send_whatsapp_message(message: str):
+import re
+
+def send_whatsapp_message(message: str, to_number: str = None):
+    # Use provided number or fallback to .env
+    raw_recipient = to_number if to_number and to_number.strip() else USER_WHATSAPP_NUMBER
+    
+    # Clean the number: keep only digits and +
+    recipient = re.sub(r"[^\d+]", "", str(raw_recipient))
+
     if not all([
         TWILIO_ACCOUNT_SID,
         TWILIO_AUTH_TOKEN,
         TWILIO_WHATSAPP_NUMBER,
-        USER_WHATSAPP_NUMBER
+        recipient
     ]):
-        print("❌ ERROR: .env not loaded or variables missing")
+        print(f"❌ ERROR: Twilio credentials or recipient missing. Recipient: {recipient}")
         return
 
-    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    # Twilio sandbox requires the + prefix
+    if not recipient.startswith("+"):
+        print(f"⚠️ WARNING: WhatsApp number '{recipient}' missing '+' prefix. Twilio might fail.")
 
-    msg = client.messages.create(
-        body=message,
-        from_=f"whatsapp:{TWILIO_WHATSAPP_NUMBER}",
-        to=f"whatsapp:{USER_WHATSAPP_NUMBER}",
-    )
-
-    print("📲 WhatsApp message sent successfully")
-    print("Message SID:", msg.sid)
+    try:
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        msg = client.messages.create(
+            body=message,
+            from_=f"whatsapp:{TWILIO_WHATSAPP_NUMBER}",
+            to=f"whatsapp:{recipient}",
+        )
+        print(f"📲 WhatsApp message sent to {recipient} | SID: {msg.sid}")
+    except Exception as e:
+        print(f"❌ Twilio Error: {e}")
